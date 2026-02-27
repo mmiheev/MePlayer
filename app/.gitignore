@@ -1,0 +1,60 @@
+/build
+
+# Built application files
+*.apk
+*.ap_
+*.aab
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+build/
+app/build/
+
+# Gradle files
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+.gradletasknamecache
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/modules.xml
+.idea/compiler.xml
+.idea/jarRepositories.xml
+.idea/misc.xml
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetDropDown.xml
+.idea/sonarlint
+.idea/runConfigurations.xml
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log file
+*.log
+
+# Android Studio captures folder
+captures/
+
+# Keystore files (DO NOT commit them!)
+*.jks
+*.keystore
+keystore.properties

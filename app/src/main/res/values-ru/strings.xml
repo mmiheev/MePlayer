@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Общие строки -->
+    <string name="permission_denied">Доступ запрещён</string>
+    <string name="service_not_ready">Сервис ещё не готов, попробуйте ещё раз</string>
+    <string name="delete_cancelled">Удаление отменено</string>
+    <string name="delete_start_failed">Не удалось начать удаление</string>
+    <string name="write_permission_needed">Для удаления необходимо разрешение на запись</string>
+    <string name="delete_failed">Не удалось удалить файл</string>
+    <string name="delete_error">Ошибка при удалении: %s</string>
+
+    <!-- Заглушки для тегов аудио -->
+    <string name="unknown_title">Неизвестно</string>
+    <string name="unknown_artist">Неизвестный исполнитель</string>
+
+    <!-- Маршруты навигации (если требуется локализация) -->
+    <string name="route_main">main</string>
+    <string name="route_player">player</string>
+    <string name="route_settings">settings</string>
+
+    <!-- Строки главного экрана -->
+    <string name="search_hint">Поиск…</string>
+    <string name="close_search">Закрыть поиск</string>
+    <string name="search_icon">Поиск</string>
+    <string name="settings_icon">Настройки</string>
+
+    <!-- Диалог удаления -->
+    <string name="delete_title">Удалить трек?</string>
+    <string name="delete_confirmation">Вы уверены, что хотите удалить «%s»?</string>
+    <string name="delete_confirm">Удалить</string>
+    <string name="delete_cancel">Отмена</string>
+
+    <!-- Панель воспроизведения -->
+    <string name="previous">Предыдущий</string>
+    <string name="pause">Пауза</string>
+    <string name="play">Воспроизвести</string>
+    <string name="next">Следующий</string>
+
+    <!-- Экран настроек -->
+    <string name="settings_title">Настройки</string>
+    <string name="back">Назад</string>
+    <string name="dark_theme">Тёмная тема</string>
+
+    <!-- Экран плеера -->
+    <string name="no_song_playing">Нет воспроизводимого трека</string>
+    <string name="shuffle">Перемешать</string>
+
+</resources>

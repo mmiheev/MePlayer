@@ -1,0 +1,55 @@
+<resources>
+    <!-- Common strings -->
+    <string name="permission_denied">Permission denied</string>
+    <string name="service_not_ready">Service not ready yet, please try again</string>
+    <string name="delete_cancelled">Deletion cancelled</string>
+    <string name="delete_start_failed">Failed to start deletion</string>
+    <string name="write_permission_needed">Write permission required to delete</string>
+    <string name="delete_failed">Failed to delete file</string>
+    <string name="delete_error">Error during deletion: %s</string>
+
+    <!-- Fallback labels for audio tags -->
+    <string name="unknown_title">Unknown</string>
+    <string name="unknown_artist">Unknown Artist</string>
+
+    <!-- Navigation routes (if localization is needed) -->
+    <string name="route_main">main</string>
+    <string name="route_player">player</string>
+    <string name="route_settings">settings</string>
+
+    <!-- Main screen strings -->
+    <string name="app_name" translatable="false">MePlayer</string>
+    <string name="search_hint">Search…</string>
+    <string name="close_search">Close search</string>
+    <string name="search_icon">Search</string>
+    <string name="settings_icon">Settings</string>
+
+    <!-- Delete dialog -->
+    <string name="delete_title">Delete track?</string>
+    <string name="delete_confirmation">Are you sure you want to delete \'%s\'?</string>
+    <string name="delete_confirm">Delete</string>
+    <string name="delete_cancel">Cancel</string>
+
+    <!-- Player bar -->
+    <string name="previous">Previous</string>
+    <string name="pause">Pause</string>
+    <string name="play">Play</string>
+    <string name="next">Next</string>
+
+    <!-- Settings screen -->
+    <string name="settings_title">Settings</string>
+    <string name="back">Back</string>
+    <string name="dark_theme">Dark Theme</string>
+
+    <!-- Player screen -->
+    <string name="no_song_playing">No song playing</string>
+    <string name="shuffle">Shuffle</string>
+
+    <!--    Music service-->
+    <string name="music_service_tag">MusicService</string>
+    <string name="dynamics_processing_requires">DynamicsProcessing requires Android P or higher</string>
+    <string name="dynamics_processing_enabled">DynamicsProcessing enabled successfully</string>
+    <string name="dynamics_processing_failed">Failed to setup DynamicsProcessing</string>
+    <string name="notification_channel_name">Music Player Channel</string>
+
+</resources>
