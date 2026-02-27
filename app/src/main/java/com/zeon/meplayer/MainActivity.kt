@@ -77,6 +77,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+    private val requestWritePermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            pendingDeleteAudio?.let { performDelete(it) }
+        } else {
+            Toast.makeText(this, getString(R.string.write_permission_needed), Toast.LENGTH_SHORT).show()
+        }
+        pendingDeleteAudio = null
+    }
+
     private val deleteAudioLauncher =
         registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
@@ -173,13 +182,10 @@ class MainActivity : ComponentActivity() {
             pendingDeleteAudio = audio
             val deleteRequest = MediaStore.createDeleteRequest(contentResolver, listOf(audio.uri))
             try {
-                deleteAudioLauncher.launch(
-                    IntentSenderRequest.Builder(deleteRequest.intentSender).build()
-                )
+                deleteAudioLauncher.launch(IntentSenderRequest.Builder(deleteRequest.intentSender).build())
             } catch (e: IntentSender.SendIntentException) {
                 e.printStackTrace()
-                Toast.makeText(this, getString(R.string.delete_start_failed), Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, getString(R.string.delete_start_failed), Toast.LENGTH_SHORT).show()
             }
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -187,10 +193,7 @@ class MainActivity : ComponentActivity() {
                     performDelete(audio)
                 } else {
                     pendingDeleteAudio = audio
-                    requestPermissions(
-                        arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                        REQUEST_WRITE_PERMISSION
-                    )
+                    requestWritePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                 }
             } else {
                 performDelete(audio)
@@ -223,54 +226,6 @@ class MainActivity : ComponentActivity() {
             if (isServiceBound && musicService != null) {
                 musicService!!.updateCurrentPositionAfterDeletion(index)
             }
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            REQUEST_PERMISSION -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    loadMusic()
-                } else {
-                    Toast.makeText(this, getString(R.string.permission_denied), Toast.LENGTH_SHORT)
-                        .show()
-                }
-            }
-
-            REQUEST_WRITE_PERMISSION -> {
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    pendingDeleteAudio?.let { performDelete(it) }
-                } else {
-                    Toast.makeText(
-                        this,
-                        getString(R.string.write_permission_needed),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                pendingDeleteAudio = null
-            }
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == DELETE_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                pendingDeleteAudio?.let { audio ->
-                    removeAudioFromList(audio)
-                }
-            } else {
-                Toast.makeText(this, getString(R.string.delete_cancelled), Toast.LENGTH_SHORT)
-                    .show()
-            }
-            pendingDeleteAudio = null
         }
     }
 
@@ -325,11 +280,5 @@ class MainActivity : ComponentActivity() {
             unbindService(connection)
             isServiceBound = false
         }
-    }
-
-    companion object {
-        private const val REQUEST_PERMISSION = 1
-        private const val DELETE_REQUEST_CODE = 100
-        private const val REQUEST_WRITE_PERMISSION = 2
     }
 }
