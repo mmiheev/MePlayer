@@ -2,6 +2,8 @@
 
 MePlayer is a beautiful, lightweight, and privacy‑focused music player for Android. Built entirely with **Kotlin** and **Jetpack Compose**, it follows **Material Design 3** guidelines and offers a seamless listening experience without any ads or tracking.
 
+> ⚠️ **Note:** MePlayer is still under active development. Feedback is appreciated!
+
 ## 📸 Screenshots
 
 <table>
@@ -30,8 +32,6 @@ MePlayer is a beautiful, lightweight, and privacy‑focused music player for And
     </td>
   </tr>
 </table>
-
-> ⚠️ **Note:** MePlayer is still under active development. Feedback is appreciated!
 
 ## 📥 Download
  
