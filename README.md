@@ -62,7 +62,6 @@ MePlayer is a beautiful, lightweight, and privacy‑focused music player for And
 - [Coroutines & Flow](https://kotlinlang.org/docs/coroutines-overview.html) – Asynchronous programming.
 - [MediaStore](https://developer.android.com/reference/android/provider/MediaStore) – Querying local audio files.
 - [MediaPlayer](https://developer.android.com/reference/android/media/MediaPlayer) – Audio playback.
-- [Dagger Hilt](https://dagger.dev/hilt/) – Dependency injection (if used; not in the code, but we can mention it's optional). *Actually, the code doesn't use Hilt, so we skip.*
 
 ## 🤝 Contributing
 
