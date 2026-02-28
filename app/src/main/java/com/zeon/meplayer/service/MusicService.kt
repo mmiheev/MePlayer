@@ -34,8 +34,13 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener {
     private var currentPosition = -1
     private var dynamicsProcessing: DynamicsProcessing? = null
     private val callbacks = mutableListOf<MusicServiceCallback>()
+
     private var shuffleEnabled = false
     private val shuffleListeners = mutableListOf<OnShuffleChangeListener>()
+
+    private var isMuted = false
+    private val muteListeners = mutableListOf<OnMuteChangeListener>()
+
     private var shuffleOrder: MutableList<Int>? = null
     private var shuffleIndex: Int = 0
     private val becomingNoisyReceiver = object : BroadcastReceiver() {
@@ -96,6 +101,7 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener {
             mediaPlayer?.reset()
             mediaPlayer?.setDataSource(song.path)
             mediaPlayer?.prepare()
+            mediaPlayer?.setVolume(if (isMuted) 0f else 1f, if (isMuted) 0f else 1f)
             mediaPlayer?.start()
             startForeground(NOTIFICATION_ID, createNotification(song))
             notifySongChanged()
@@ -306,6 +312,10 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener {
         fun onShuffleChanged(enabled: Boolean)
     }
 
+    interface OnMuteChangeListener {
+        fun onMuteChanged(muted: Boolean)
+    }
+
     fun addShuffleListener(listener: OnShuffleChangeListener) {
         shuffleListeners.add(listener)
     }
@@ -326,6 +336,30 @@ class MusicService : Service(), MediaPlayer.OnCompletionListener {
             shuffleOrder = null
         }
         notifyShuffleChanged()
+    }
+
+    fun isMuted(): Boolean = isMuted
+
+    fun setMute(mute: Boolean) {
+        if (isMuted != mute) {
+            isMuted = mute
+            mediaPlayer?.setVolume(if (mute) 0f else 1f, if (mute) 0f else 1f)
+            notifyMuteChanged()
+        }
+    }
+
+    fun toggleMute() = setMute(!isMuted)
+
+    fun addMuteListener(listener: OnMuteChangeListener) {
+        muteListeners.add(listener)
+    }
+
+    fun removeMuteListener(listener: OnMuteChangeListener) {
+        muteListeners.remove(listener)
+    }
+
+    private fun notifyMuteChanged() {
+        muteListeners.forEach { it.onMuteChanged(isMuted) }
     }
 
     private fun buildShuffleOrder(startIndex: Int) {

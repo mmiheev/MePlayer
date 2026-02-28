@@ -43,9 +43,18 @@ class PlayerViewModel : ViewModel() {
     private val _shuffleEnabled = MutableStateFlow(false)
     val shuffleEnabled: StateFlow<Boolean> = _shuffleEnabled
 
+    private val _isMuted = MutableStateFlow(false)
+    val isMuted: StateFlow<Boolean> = _isMuted
+
     private val shuffleListener = object : MusicService.OnShuffleChangeListener {
         override fun onShuffleChanged(enabled: Boolean) {
             _shuffleEnabled.value = enabled
+        }
+    }
+
+    private val muteListener = object : MusicService.OnMuteChangeListener {
+        override fun onMuteChanged(muted: Boolean) {
+            _isMuted.value = muted
         }
     }
 
@@ -61,13 +70,16 @@ class PlayerViewModel : ViewModel() {
     fun setService(service: MusicService) {
         musicService?.removeCallback(callback)
         musicService?.removeShuffleListener(shuffleListener)
+        musicService?.removeMuteListener(muteListener)
 
         musicService = service
         service.addCallback(callback)
         service.addShuffleListener(shuffleListener)
+        service.addMuteListener(muteListener)
 
         _currentSong.value = service.getCurrentSong()
         _isPlaying.value = service.isPlaying()
+        _isMuted.value = service.isMuted()
         _duration.value = service.getDuration()
         _shuffleEnabled.value = service.isShuffleEnabled()
 
@@ -120,10 +132,15 @@ class PlayerViewModel : ViewModel() {
 
     fun playPrevious() { musicService?.playPrevious() }
 
+    fun toggleMute() {
+        musicService?.toggleMute()
+    }
+
     override fun onCleared() {
         super.onCleared()
         musicService?.removeCallback(callback)
         musicService?.removeShuffleListener(shuffleListener)
+        musicService?.removeMuteListener(muteListener)
         stopUpdatingPosition()
         musicService = null
     }
