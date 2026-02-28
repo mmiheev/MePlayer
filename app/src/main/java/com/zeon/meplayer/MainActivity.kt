@@ -30,6 +30,7 @@ import com.zeon.meplayer.ui.main.MainScreen
 import com.zeon.meplayer.ui.player.PlayerScreen
 import com.zeon.meplayer.ui.settings.SettingsScreen
 import com.zeon.meplayer.ui.theme.MePlayerTheme
+import com.zeon.meplayer.ui.theme.PrimaryLight
 import com.zeon.meplayer.viewmodel.PlayerViewModel
 import com.zeon.meplayer.viewmodel.ThemeViewModel
 import kotlinx.coroutines.Dispatchers
