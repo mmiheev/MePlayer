@@ -35,6 +35,8 @@
     <string name="pause">Pause</string>
     <string name="play">Play</string>
     <string name="next">Next</string>
+    <string name="mute" translatable="false">Mute</string>
+    <string name="unmute" translatable="false">Unmute</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>
@@ -46,10 +48,10 @@
     <string name="shuffle">Shuffle</string>
 
     <!--    Music service-->
-    <string name="music_service_tag">MusicService</string>
-    <string name="dynamics_processing_requires">DynamicsProcessing requires Android P or higher</string>
-    <string name="dynamics_processing_enabled">DynamicsProcessing enabled successfully</string>
-    <string name="dynamics_processing_failed">Failed to setup DynamicsProcessing</string>
-    <string name="notification_channel_name">Music Player Channel</string>
+    <string name="music_service_tag" translatable="false">MusicService</string>
+    <string name="dynamics_processing_requires" translatable="false">DynamicsProcessing requires Android P or higher</string>
+    <string name="dynamics_processing_enabled" translatable="false">DynamicsProcessing enabled successfully</string>
+    <string name="dynamics_processing_failed" translatable="false">Failed to setup DynamicsProcessing</string>
+    <string name="notification_channel_name" translatable="false">Music Player Channel</string>
 
 </resources>

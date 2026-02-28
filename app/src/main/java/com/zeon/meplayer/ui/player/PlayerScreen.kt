@@ -17,9 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.filled.VolumeMute
-import androidx.compose.material.icons.automirrored.filled.VolumeOff
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -53,8 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.zeon.meplayer.R
 import com.zeon.meplayer.ui.theme.AppGradients
-import com.zeon.meplayer.viewmodel.PlayerViewModel
 import com.zeon.meplayer.ui.utils.formatTime
+import com.zeon.meplayer.viewmodel.PlayerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -236,7 +233,7 @@ fun PlayerScreen(
                 ) {
                     Icon(
                         imageVector = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
-                        contentDescription = if (isMuted) "Unmute" else "Mute",
+                        contentDescription = if (isMuted) stringResource(R.string.unmute) else stringResource(R.string.mute),
                         tint = if (isMuted) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
