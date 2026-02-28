@@ -35,7 +35,7 @@ MePlayer is a beautiful, lightweight, and privacy‑focused music player for And
 
 ## 📥 Download
  
-[<img src="./assets/images/get-it-on-github.png" alt="GitHub" height="80">](https://github.com/mmiheev/MePlayer/releases)
+[<img src="./assets/badges/get-it-on-github.png" alt="GitHub" height="80">](https://github.com/mmiheev/MePlayer/releases)
 
 ## 🚀 Getting Started
 
