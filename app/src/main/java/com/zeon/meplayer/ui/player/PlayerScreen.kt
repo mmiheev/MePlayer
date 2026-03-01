@@ -95,7 +95,6 @@ fun PlayerScreen(
                     }
                 },
                 actions = {
-                    // Кнопка открытия меню
                     IconButton(onClick = { expanded = true }) {
                         Icon(
                             Icons.Default.MoreVert,
@@ -106,7 +105,6 @@ fun PlayerScreen(
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
-                        // Пункт "Настройки" – переход на экран настроек
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.settings_title)) },
                             onClick = {
