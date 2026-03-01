@@ -6,11 +6,9 @@ import com.zeon.meplayer.manager.PlaybackManager
 import com.zeon.meplayer.model.Audio
 import com.zeon.meplayer.service.MusicService
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import java.lang.ref.WeakReference
 
 /**
  * ViewModel responsible for managing the state of the music player.

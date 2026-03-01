@@ -10,12 +10,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
-import android.media.MediaPlayer
-import android.media.audiofx.DynamicsProcessing
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.zeon.meplayer.MainActivity
 import com.zeon.meplayer.R
