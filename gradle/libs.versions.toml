@@ -7,12 +7,14 @@ espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
 kotlin = "2.3.10"
 composeBom = "2026.02.00"
+media3Exoplayer = "1.5.1"
 recyclerview = "1.4.0"
 navigationRuntimeKtx = "2.9.7"
 navigationCompose = "2.9.7"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

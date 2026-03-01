@@ -35,12 +35,14 @@
     <string name="pause">Pause</string>
     <string name="play">Play</string>
     <string name="next">Next</string>
-    <string name="mute" translatable="false">Mute</string>
-    <string name="unmute" translatable="false">Unmute</string>
+    <string name="mute">Mute</string>
+    <string name="unmute">Unmute</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>
     <string name="back">Back</string>
+    <string name="more_options">More</string>
+    <string name="light_theme">Light Theme</string>
     <string name="dark_theme">Dark Theme</string>
 
     <!-- Player screen -->

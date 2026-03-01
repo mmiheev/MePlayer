@@ -17,16 +17,22 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,6 +45,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,11 +61,15 @@ import com.zeon.meplayer.R
 import com.zeon.meplayer.ui.theme.AppGradients
 import com.zeon.meplayer.ui.utils.formatTime
 import com.zeon.meplayer.viewmodel.PlayerViewModel
+import com.zeon.meplayer.viewmodel.ThemeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerScreen(
-    navController: NavController, playerViewModel: PlayerViewModel
+    navController: NavController,
+    playerViewModel: PlayerViewModel,
+    themeViewModel: ThemeViewModel,
+    settingsRoute: String,
 ) {
     val currentSong by playerViewModel.currentSong.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
@@ -65,21 +78,73 @@ fun PlayerScreen(
     val duration by playerViewModel.duration.collectAsState()
 
     val isDarkTheme = isSystemInDarkTheme()
+    val albumGradient = if (isDarkTheme) AppGradients.darkGradient else AppGradients.primaryGradient
 
-    val albumGradient = if (isDarkTheme) AppGradients.darkGradient
-    else AppGradients.primaryGradient
+    var expanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { }, navigationIcon = {
-                IconButton(onClick = { navController.popBackStack() }) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.List,
-                        contentDescription = stringResource(R.string.back)
-                    )
+            TopAppBar(
+                title = { },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.List,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                },
+                actions = {
+                    // Кнопка открытия меню
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.more_options)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        // Пункт "Настройки" – переход на экран настроек
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.settings_title)) },
+                            onClick = {
+                                expanded = false
+                                navController.navigate(settingsRoute)
+                            },
+                            leadingIcon = {
+                                Icon(Icons.Default.Settings, contentDescription = null)
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    if (themeViewModel.isDarkTheme.value)
+                                        stringResource(R.string.light_theme)
+                                    else
+                                        stringResource(R.string.dark_theme)
+                                )
+                            },
+                            onClick = {
+                                expanded = false
+                                themeViewModel.setDarkTheme(!themeViewModel.isDarkTheme.value)
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    if (themeViewModel.isDarkTheme.value)
+                                        Icons.Default.WbSunny
+                                    else
+                                        Icons.Default.DarkMode,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+                    }
                 }
-            })
-        }) { paddingValues ->
+            )
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
