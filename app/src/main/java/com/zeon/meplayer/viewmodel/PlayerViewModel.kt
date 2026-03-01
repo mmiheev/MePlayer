@@ -26,11 +26,11 @@ class PlayerViewModel : ViewModel() {
     private val _isPlaying = MutableStateFlow(false)
     val isPlaying: StateFlow<Boolean> = _isPlaying
 
-    private val _currentPosition = MutableStateFlow(0)
-    val currentPosition: StateFlow<Int> = _currentPosition
+    private val _currentPosition = MutableStateFlow(0L)
+    val currentPosition: StateFlow<Long> = _currentPosition
 
-    private val _duration = MutableStateFlow(0)
-    val duration: StateFlow<Int> = _duration
+    private val _duration = MutableStateFlow(0L)
+    val duration: StateFlow<Long> = _duration
 
     private val _shuffleEnabled = MutableStateFlow(false)
     val shuffleEnabled: StateFlow<Boolean> = _shuffleEnabled
@@ -69,7 +69,7 @@ class PlayerViewModel : ViewModel() {
 
     fun playNext() = playbackManager?.playNext()
     fun playPrevious() = playbackManager?.playPrevious()
-    fun seekTo(position: Int) = playbackManager?.seekTo(position)
+    fun seekTo(position: Long) = playbackManager?.seekTo(position)
     fun toggleShuffle() = playbackManager?.toggleShuffle()
     fun toggleMute() = playbackManager?.toggleMute()
 

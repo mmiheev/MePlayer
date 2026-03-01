@@ -1,6 +1,7 @@
 package com.zeon.meplayer.manager
 
 import android.content.Context
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
@@ -23,35 +24,38 @@ class PlaybackManager(context: Context) {
         override fun onPlaybackStateChanged(playbackState: Int) {
             when (playbackState) {
                 Player.STATE_ENDED -> playNext()
-                Player.STATE_READY -> {
-                    _state.update { it.copy(duration = player.duration.toInt()) }
-                }
+                Player.STATE_READY -> updateDuration()
+                Player.STATE_IDLE -> resetFlags()
             }
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-            val song = getCurrentSong()
-            _state.update {
-                it.copy(
-                    currentSong = song,
-                    duration = player.duration.toInt(),
-                    currentPosition = player.currentPosition.toInt()
-                )
-            }
+            updateCurrentSongInfo()
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED ||
                 reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
-                song?.let { onPlaybackStarted?.invoke(it) }
+                getCurrentSong()?.let { onPlaybackStarted?.invoke(it) }
             }
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
+            if (!isPlaying && (isSwitchingTrack || isSeeking)) return
+
             _state.update { it.copy(isPlaying = isPlaying) }
+
             if (isPlaying) {
-                startPositionUpdates()
-                getCurrentSong()?.let { onPlaybackStarted?.invoke(it) }
+                onPlaybackResumed()
             } else {
-                stopPositionUpdates()
-                onPlaybackPaused?.invoke()
+                onPlaybackPaused()
+            }
+        }
+
+        override fun onPositionDiscontinuity(
+            oldPosition: Player.PositionInfo,
+            newPosition: Player.PositionInfo,
+            reason: Int
+        ) {
+            if (reason == 3) {
+                isSeeking = false
             }
         }
     }
@@ -76,9 +80,11 @@ class PlaybackManager(context: Context) {
     private var shuffleIndex = 0
 
     private var isMuted = false
+    private var isSwitchingTrack = false
+    private var isSeeking = false
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private var positionJob: Job? = null
+    private var positionUpdateJob: Job? = null
 
     var onPlaybackStarted: ((Audio) -> Unit)? = null
     var onPlaybackPaused: (() -> Unit)? = null
@@ -86,21 +92,54 @@ class PlaybackManager(context: Context) {
     init { player.volume = 1f }
 
     private fun getCurrentSong(): Audio? =
-        if (currentIndex in musicList.indices) musicList[currentIndex] else null
+        musicList.getOrNull(currentIndex)
+
+    private fun updateCurrentSongInfo() {
+        val song = getCurrentSong()
+        _state.update {
+            it.copy(
+                currentSong = song,
+                duration = player.duration.takeIf { it != C.TIME_UNSET } ?: 0,
+                currentPosition = player.currentPosition
+            )
+        }
+    }
+
+    private fun updateDuration() {
+        val duration = player.duration.takeIf { it != C.TIME_UNSET } ?: 0
+        _state.update { it.copy(duration = duration) }
+    }
+
+    private fun resetFlags() {
+        isSwitchingTrack = false
+        isSeeking = false
+    }
+
+    private fun onPlaybackResumed() {
+        isSwitchingTrack = false
+        isSeeking = false
+        startPositionUpdates()
+        getCurrentSong()?.let { onPlaybackStarted?.invoke(it) }
+    }
+
+    private fun onPlaybackPaused() {
+        stopPositionUpdates()
+        onPlaybackPaused?.invoke()
+    }
 
     private fun startPositionUpdates() {
-        positionJob?.cancel()
-        positionJob = scope.launch {
+        positionUpdateJob?.cancel()
+        positionUpdateJob = scope.launch {
             while (player.isPlaying) {
-                _state.update { it.copy(currentPosition = player.currentPosition.toInt()) }
-                delay(500)
+                _state.update { it.copy(currentPosition = player.currentPosition) }
+                delay(POSITION_UPDATE_INTERVAL_MS)
             }
         }
     }
 
     private fun stopPositionUpdates() {
-        positionJob?.cancel()
-        positionJob = null
+        positionUpdateJob?.cancel()
+        positionUpdateJob = null
     }
 
     fun playMusic(index: Int) {
@@ -113,13 +152,14 @@ class PlaybackManager(context: Context) {
         _state.update {
             it.copy(
                 currentSong = song,
-                isPlaying = true,
                 currentPosition = 0,
                 duration = 0,
                 shuffleEnabled = shuffleEnabled,
                 isMuted = isMuted
             )
         }
+
+        isSwitchingTrack = true
 
         val mediaItem = MediaItem.fromUri(song.path)
         player.setMediaItem(mediaItem)
@@ -128,30 +168,33 @@ class PlaybackManager(context: Context) {
         player.volume = if (isMuted) 0f else 1f
     }
 
-    fun pauseMusic() { player.pause() }
+    fun pauseMusic() {
+        player.pause()
+    }
 
     fun startMusic() {
-        if (!player.isPlaying && currentIndex != -1) { player.play() }
+        if (!player.isPlaying && currentIndex != -1) {
+            player.play()
+        }
     }
 
     fun playNext() {
         if (musicList.isEmpty() || currentIndex == -1) return
-
         val nextIndex = if (shuffleEnabled) getNextShuffleIndex() else (currentIndex + 1) % musicList.size
         playMusic(nextIndex)
     }
 
     fun playPrevious() {
         if (musicList.isEmpty() || currentIndex == -1) return
-
         val prevIndex = if (shuffleEnabled) getPreviousShuffleIndex() else {
-            if (currentIndex - 1 < 0) musicList.size - 1 else currentIndex - 1
+            if (currentIndex - 1 < 0) musicList.lastIndex else currentIndex - 1
         }
         playMusic(prevIndex)
     }
 
-    fun seekTo(position: Int) {
-        player.seekTo(position.toLong())
+    fun seekTo(position: Long) {
+        isSeeking = true
+        player.seekTo(position)
         _state.update { it.copy(currentPosition = position) }
     }
 
@@ -169,6 +212,11 @@ class PlaybackManager(context: Context) {
         isMuted = !isMuted
         player.volume = if (isMuted) 0f else 1f
         _state.update { it.copy(isMuted = isMuted) }
+    }
+
+    fun release() {
+        scope.cancel()
+        player.release()
     }
 
     private fun buildShuffleOrder(startIndex: Int = currentIndex) {
@@ -190,12 +238,12 @@ class PlaybackManager(context: Context) {
             return order[shuffleIndex]
         } else {
             buildShuffleOrder(currentIndex)
-            return if (shuffleOrder!!.size > 1) shuffleOrder!![1] else currentIndex
+            return shuffleOrder!!.getOrElse(1) { currentIndex }
         }
     }
 
     private fun getPreviousShuffleIndex(): Int {
-        val order = shuffleOrder ?: return (if (currentIndex - 1 < 0) musicList.size - 1 else currentIndex - 1)
+        val order = shuffleOrder ?: return (if (currentIndex - 1 < 0) musicList.lastIndex else currentIndex - 1)
         if (shuffleIndex - 1 >= 0) {
             shuffleIndex--
             return order[shuffleIndex]
@@ -207,21 +255,20 @@ class PlaybackManager(context: Context) {
 
     private fun updateShuffleOrderIfNeeded() {
         if (shuffleEnabled) {
-            buildShuffleOrder(if (currentIndex in musicList.indices) currentIndex else 0)
+            buildShuffleOrder(currentIndex.takeIf { it in musicList.indices } ?: 0)
         }
-    }
-
-    fun release() {
-        scope.cancel()
-        player.release()
     }
 
     data class PlaybackState(
         val currentSong: Audio? = null,
         val isPlaying: Boolean = false,
-        val currentPosition: Int = 0,
-        val duration: Int = 0,
+        val currentPosition: Long = 0L,
+        val duration: Long = 0L,
         val shuffleEnabled: Boolean = false,
         val isMuted: Boolean = false
     )
+
+    companion object {
+        private const val POSITION_UPDATE_INTERVAL_MS = 500L
+    }
 }

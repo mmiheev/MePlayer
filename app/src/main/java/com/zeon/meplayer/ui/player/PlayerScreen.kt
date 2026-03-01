@@ -198,7 +198,7 @@ fun PlayerScreen(
             Column(modifier = Modifier.fillMaxWidth()) {
                 Slider(
                     value = currentPosition.toFloat(),
-                    onValueChange = { playerViewModel.seekTo(it.toInt()) },
+                    onValueChange = { playerViewModel.seekTo(it.toLong()) },
                     valueRange = 0f..maxOf(duration.toFloat(), 1f),
                     colors = SliderDefaults.colors(
                         thumbColor = MaterialTheme.colorScheme.primary,
@@ -212,11 +212,11 @@ fun PlayerScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        formatTime(currentPosition.toLong()),
+                        formatTime(currentPosition),
                         style = MaterialTheme.typography.labelSmall
                     )
                     Text(
-                        formatTime(duration.toLong()), style = MaterialTheme.typography.labelSmall
+                        formatTime(duration), style = MaterialTheme.typography.labelSmall
                     )
                 }
             }

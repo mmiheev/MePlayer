@@ -41,8 +41,8 @@ import com.zeon.meplayer.ui.theme.AppGradients
 fun PlayingBar(
     currentSong: Audio?,
     isPlaying: Boolean,
-    currentPosition: Int,
-    duration: Int,
+    currentPosition: Long,
+    duration: Long,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
