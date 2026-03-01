@@ -62,7 +62,7 @@ MePlayer is a beautiful, lightweight, and privacy‑focused music player for And
 - [ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel) – UI state management.
 - [Coroutines & Flow](https://kotlinlang.org/docs/coroutines-overview.html) – Asynchronous programming.
 - [MediaStore](https://developer.android.com/reference/android/provider/MediaStore) – Querying local audio files.
-- [MediaPlayer](https://developer.android.com/reference/android/media/MediaPlayer) – Audio playback.
+- [ExoPlayer](https://developer.android.com/reference/android/media/MediaPlayer) – Audio playback.
 
 ## 🤝 Contributing
 
@@ -72,9 +72,9 @@ If you have a suggestion that would make this better, please fork the repo and c
 
 **Steps to contribute:**
 1. Fork the Project
-2. Create your feature branch (`git checkout -b feature-name`)
+2. Create your feature branch (`git checkout -b feature/name`)
 3. Commit your changes (`git commit -m 'add some new feature'`)
-4. Push to the branch (`git push origin feature-name`)
+4. Push to the branch (`git push origin feature/name`)
 5. Open a pull request
 
 ## 🐛 Bug Reports & Feature Requests
