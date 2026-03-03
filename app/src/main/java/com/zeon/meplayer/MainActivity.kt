@@ -21,6 +21,7 @@ import com.zeon.meplayer.ui.theme.MePlayerTheme
 import com.zeon.meplayer.utils.PermissionHandler
 import com.zeon.meplayer.viewmodel.PlayerViewModel
 import com.zeon.meplayer.viewmodel.ThemeViewModel
+import com.zeon.meplayer.viewmodel.rememberThemeViewModel
 
 /**
  * Main Activity of the MePlayer application.
@@ -53,11 +54,11 @@ class MainActivity : ComponentActivity() {
         permissionHandler.checkPermissionAndLoadMusic()
 
         setContent {
-            val isDarkTheme by themeViewModel.isDarkTheme
+            val themeViewModel = rememberThemeViewModel()
             val musicList by musicRepository.musicList.collectAsState()
-
+            val themeMode by themeViewModel.themeMode.collectAsState()
             MePlayerTheme(
-                darkTheme = isDarkTheme,
+                themeMode = themeMode,
                 dynamicColor = false
             ) {
                 val navController = rememberNavController()

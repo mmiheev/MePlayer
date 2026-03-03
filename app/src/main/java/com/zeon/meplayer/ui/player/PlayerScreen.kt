@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Pause
@@ -28,7 +27,6 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -60,6 +58,7 @@ import androidx.navigation.NavController
 import com.zeon.meplayer.R
 import com.zeon.meplayer.ui.theme.AppGradients
 import com.zeon.meplayer.ui.utils.formatTime
+import com.zeon.meplayer.ui.utils.theme.ThemeMode
 import com.zeon.meplayer.viewmodel.PlayerViewModel
 import com.zeon.meplayer.viewmodel.ThemeViewModel
 
@@ -77,7 +76,13 @@ fun PlayerScreen(
     val currentPosition by playerViewModel.currentPosition.collectAsState()
     val duration by playerViewModel.duration.collectAsState()
 
-    val isDarkTheme = isSystemInDarkTheme()
+    val themeMode by themeViewModel.themeMode.collectAsState()
+    val systemIsDark = isSystemInDarkTheme()
+    val isDarkTheme = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.AUTO -> systemIsDark
+    }
     val albumGradient = if (isDarkTheme) AppGradients.darkGradient else AppGradients.primaryGradient
 
     var expanded by remember { mutableStateOf(false) }
@@ -95,48 +100,10 @@ fun PlayerScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { expanded = true }) {
+                    IconButton(onClick = { navController.navigate(settingsRoute) }) {
                         Icon(
-                            Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.more_options)
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.settings_title)) },
-                            onClick = {
-                                expanded = false
-                                navController.navigate(settingsRoute)
-                            },
-                            leadingIcon = {
-                                Icon(Icons.Default.Settings, contentDescription = null)
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    if (themeViewModel.isDarkTheme.value)
-                                        stringResource(R.string.light_theme)
-                                    else
-                                        stringResource(R.string.dark_theme)
-                                )
-                            },
-                            onClick = {
-                                expanded = false
-                                themeViewModel.setDarkTheme(!themeViewModel.isDarkTheme.value)
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    if (themeViewModel.isDarkTheme.value)
-                                        Icons.Default.WbSunny
-                                    else
-                                        Icons.Default.DarkMode,
-                                    contentDescription = null
-                                )
-                            }
+                            Icons.Default.Settings,
+                            contentDescription = stringResource(R.string.settings_icon)
                         )
                     }
                 }
@@ -296,7 +263,9 @@ fun PlayerScreen(
                 ) {
                     Icon(
                         imageVector = if (isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
-                        contentDescription = if (isMuted) stringResource(R.string.unmute) else stringResource(R.string.mute),
+                        contentDescription = if (isMuted) stringResource(R.string.unmute) else stringResource(
+                            R.string.mute
+                        ),
                         tint = if (isMuted) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )

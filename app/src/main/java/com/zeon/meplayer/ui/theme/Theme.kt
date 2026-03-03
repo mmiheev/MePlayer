@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.zeon.meplayer.ui.utils.SystemBarsEffect
+import com.zeon.meplayer.ui.utils.theme.ThemeMode
 
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryLight,
@@ -49,10 +50,16 @@ private val DarkColorScheme = darkColorScheme(
 
 @Composable
 fun MePlayerTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    themeMode: ThemeMode,
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
+    val isSystemDarkTheme = isSystemInDarkTheme()
+    val darkTheme = when (themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+        ThemeMode.AUTO -> isSystemDarkTheme
+    }
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current

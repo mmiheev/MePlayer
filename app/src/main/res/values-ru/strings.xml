@@ -40,6 +40,8 @@
     <!-- Экран настроек -->
     <string name="settings_title">Настройки</string>
     <string name="back">Назад</string>
+    <string name="theme_mode">Тема</string>
+    <string name="auto_theme">Авто</string>
     <string name="more_options">Ещё</string>
     <string name="light_theme">Светлая тема</string>
     <string name="dark_theme">Тёмная тема</string>
