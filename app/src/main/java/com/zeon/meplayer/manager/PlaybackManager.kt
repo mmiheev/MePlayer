@@ -89,6 +89,8 @@ class PlaybackManager(context: Context) {
     var onPlaybackStarted: ((Audio) -> Unit)? = null
     var onPlaybackPaused: (() -> Unit)? = null
 
+    var audioFocusHandler: (() -> Boolean)? = null
+
     init { player.volume = 1f }
 
     private fun getCurrentSong(): Audio? =
@@ -146,6 +148,8 @@ class PlaybackManager(context: Context) {
         if (musicList.isEmpty()) return
         if (currentIndex == index && player.isPlaying) return
 
+        if (audioFocusHandler?.invoke() == false) return
+
         currentIndex = index
         val song = musicList[index]
 
@@ -174,6 +178,7 @@ class PlaybackManager(context: Context) {
 
     fun startMusic() {
         if (!player.isPlaying && currentIndex != -1) {
+            if (audioFocusHandler?.invoke() == false) return
             player.play()
         }
     }
@@ -218,6 +223,8 @@ class PlaybackManager(context: Context) {
         scope.cancel()
         player.release()
     }
+
+    fun getPlayer(): ExoPlayer = player
 
     private fun buildShuffleOrder(startIndex: Int = currentIndex) {
         if (musicList.isEmpty()) {
