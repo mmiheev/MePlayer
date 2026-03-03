@@ -18,6 +18,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * Manages audio playback.
+ * Controls ExoPlayer, playback state, playlist, shuffle, mute, and position updates.
+ */
 class PlaybackManager(context: Context) {
 
     private val playerListener = object : Player.Listener {

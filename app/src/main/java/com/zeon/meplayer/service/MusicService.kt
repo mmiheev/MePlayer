@@ -58,10 +58,25 @@ class MusicService : Service() {
         fun getPlaybackManager(): PlaybackManager = playbackManager
     }
 
+    private inner class BecomingNoisyReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
+                if (playbackManager.state.value.isPlaying) {
+                    playbackManager.pauseMusic()
+                }
+            }
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
+
         playbackManager = PlaybackManager(this).apply {
             onPlaybackStarted = { song -> updateNotification(song, isPlaying = true) }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7fbd66e (Optimize code formatting)
             onPlaybackPaused = {
                 updateNotification(null, isPlaying = false)
                 abandonAudioFocus()
@@ -124,6 +139,10 @@ class MusicService : Service() {
 
     private fun requestAudioFocus(): Boolean {
         if (isAudioFocused) return true
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7fbd66e (Optimize code formatting)
         val result = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val focusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).run {
                 setAudioAttributes(
@@ -200,7 +219,11 @@ class MusicService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(song.title)
             .setContentText(song.artist)
+<<<<<<< HEAD
             .setSmallIcon(android.R.drawable.ic_media_play)  // заменить на свою иконку
+=======
+            .setSmallIcon(android.R.drawable.ic_media_play)
+>>>>>>> 7fbd66e (Optimize code formatting)
             .setContentIntent(createContentIntent())
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
                 .setMediaSession(mediaSession.sessionToken)
@@ -220,6 +243,7 @@ class MusicService : Service() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT)
     }
 
+<<<<<<< HEAD
     private fun updateMediaSession(song: Audio?, isPlaying: Boolean, position: Long) {
         if (song != null) {
             val metadata = MediaMetadataCompat.Builder()
@@ -247,6 +271,8 @@ class MusicService : Service() {
         mediaSession.setPlaybackState(state)
     }
 
+=======
+>>>>>>> 7fbd66e (Optimize code formatting)
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -259,14 +285,35 @@ class MusicService : Service() {
         }
     }
 
-    private inner class BecomingNoisyReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
-                if (playbackManager.state.value.isPlaying) {
-                    playbackManager.pauseMusic()
-                }
-            }
+    private fun updateMediaSession(song: Audio?, isPlaying: Boolean, position: Long) {
+        if (song != null) {
+            val metadata = MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.title)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.artist)
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.duration)
+                .build()
+            mediaSession.setMetadata(metadata)
         }
+<<<<<<< HEAD
     }
 
+=======
+        val state = PlaybackStateCompat.Builder()
+            .setActions(
+                PlaybackStateCompat.ACTION_PLAY or
+                        PlaybackStateCompat.ACTION_PAUSE or
+                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT or
+                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS or
+                        PlaybackStateCompat.ACTION_SEEK_TO or
+                        PlaybackStateCompat.ACTION_STOP
+            )
+            .setState(
+                if (isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
+                position,
+                1f
+            )
+            .build()
+        mediaSession.setPlaybackState(state)
+    }
+>>>>>>> 7fbd66e (Optimize code formatting)
 }
