@@ -14,7 +14,7 @@
     <string name="unknown_title">Неизвестно</string>
     <string name="unknown_artist">Неизвестный исполнитель</string>
 
-    <!-- Маршруты навигации (если требуется локализация) -->
+    <!-- Маршруты навигации -->
     <string name="route_main">main</string>
     <string name="route_player">player</string>
     <string name="route_settings">settings</string>
@@ -45,6 +45,13 @@
     <string name="more_options">Ещё</string>
     <string name="light_theme">Светлая тема</string>
     <string name="dark_theme">Тёмная тема</string>
+
+    <!-- Функционал сортировки -->
+    <string name="sort_by">Сортировать по</string>
+    <string name="sort_by_title">Названию</string>
+    <string name="sort_by_artist">Исполнителю</string>
+    <string name="sort_by_duration">Длительности</string>
+    <string name="sort_by_date_added">Дате добавления</string>
 
     <!-- Экран плеера -->
     <string name="no_song_playing">Нет воспроизводимого трека</string>

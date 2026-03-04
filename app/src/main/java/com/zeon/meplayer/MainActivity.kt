@@ -7,21 +7,30 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.zeon.meplayer.repository.MusicRepository
-import com.zeon.meplayer.service.MusicServiceConnection
-import com.zeon.meplayer.ui.main.MainScreen
-import com.zeon.meplayer.ui.player.PlayerScreen
-import com.zeon.meplayer.ui.settings.SettingsScreen
-import com.zeon.meplayer.ui.theme.MePlayerTheme
-import com.zeon.meplayer.utils.PermissionHandler
-import com.zeon.meplayer.viewmodel.PlayerViewModel
-import com.zeon.meplayer.viewmodel.ThemeViewModel
-import com.zeon.meplayer.viewmodel.rememberThemeViewModel
+import com.zeon.meplayer.data.repository.MusicRepository
+import com.zeon.meplayer.core.service.MusicServiceConnection
+import com.zeon.meplayer.presentation.screen.main.MainScreen
+import com.zeon.meplayer.presentation.screen.player.PlayerScreen
+import com.zeon.meplayer.presentation.screen.settings.SettingsScreen
+import com.zeon.meplayer.presentation.theme.MePlayerTheme
+import com.zeon.meplayer.data.local.datastore.SortPreferences
+import com.zeon.meplayer.core.permission.PermissionHandler
+import com.zeon.meplayer.presentation.screen.player.PlayerViewModel
+import com.zeon.meplayer.presentation.viewmodel.rememberThemeViewModel
+import kotlinx.coroutines.launch
 
 /**
  * Main Activity of the MePlayer application.
@@ -30,26 +39,35 @@ import com.zeon.meplayer.viewmodel.rememberThemeViewModel
  */
 class MainActivity : ComponentActivity() {
 
-    private val themeViewModel: ThemeViewModel by viewModels()
     private val playerViewModel: PlayerViewModel by viewModels()
-    private val musicRepository = MusicRepository(this)
+    private lateinit var musicRepository: MusicRepository
+    private lateinit var sortPreferences: SortPreferences
+    private lateinit var permissionHandler: PermissionHandler
 
     private val serviceConnection = MusicServiceConnection(this) { playbackManager ->
         playbackManager.musicList = musicRepository.musicList.value
         playerViewModel.attach(playbackManager)
     }
 
-    private val permissionHandler = PermissionHandler(
-        activity = this,
-        musicRepository = musicRepository,
-        onListUpdated = { updatedList ->
-            serviceConnection.getPlaybackManager()?.musicList = updatedList
-        }
-    )
-
     @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        sortPreferences = SortPreferences(this)
+        musicRepository = MusicRepository(this, sortPreferences)
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                musicRepository.musicList.collect { updatedList ->
+                    serviceConnection.getPlaybackManager()?.musicList = updatedList
+                }
+            }
+        }
+
+        permissionHandler = PermissionHandler(
+            activity = this,
+            musicRepository = musicRepository,
+        )
 
         permissionHandler.checkPermissionAndLoadMusic()
 
@@ -57,6 +75,11 @@ class MainActivity : ComponentActivity() {
             val themeViewModel = rememberThemeViewModel()
             val musicList by musicRepository.musicList.collectAsState()
             val themeMode by themeViewModel.themeMode.collectAsState()
+            val isLoading by themeViewModel.isLoading.collectAsState()
+
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+            } else
             MePlayerTheme(
                 themeMode = themeMode,
                 dynamicColor = false
@@ -116,6 +139,11 @@ class MainActivity : ComponentActivity() {
         playerViewModel.detach()
         serviceConnection.unbind()
         super.onStop()
+    }
+
+    override fun onDestroy() {
+        musicRepository.close()
+        super.onDestroy()
     }
 }
 

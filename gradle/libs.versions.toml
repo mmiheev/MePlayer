@@ -15,6 +15,7 @@ navigationRuntimeKtx = "2.9.7"
 navigationCompose = "2.9.7"
 
 [libraries]
+androidx-compose-foundation = { module = "androidx.compose.foundation:foundation" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-media = { module = "androidx.media:media", version.ref = "media" }
