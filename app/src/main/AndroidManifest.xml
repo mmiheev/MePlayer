@@ -2,10 +2,26 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- Permission to post notifications (Android 13+). Users can disable notifications in settings. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Permission to read external storage (only for Android 9 and below).
+         On newer versions, READ_MEDIA_AUDIO is used. Required to load audio files via MediaStore. -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+    <!-- Permission to read audio files only (Android 13+). Replaces READ_EXTERNAL_STORAGE on newer versions. -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+
+    <!-- Permission to run a foreground service for media playback (Android 10+).
+         Allows the service to run in the background and show a notification with playback controls. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
+    <!-- Permission to run any foreground service (Android 9+).
+         Required for MusicService to run in the background. Used together with MEDIA_PLAYBACK type. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:ignore="ForegroundServicesPolicy" />
+
+    <!-- Permission to write/delete files in external storage (only for Android 9 and below).
+         On Android 10+, deletion is done via system dialog (MediaStore.createDeleteRequest). -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28" />
 
     <application
@@ -31,7 +47,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".service.MusicService"
+        <service android:name=".core.service.MusicService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false" />
 

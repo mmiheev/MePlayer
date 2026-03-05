@@ -12,7 +12,7 @@
     <string name="unknown_title">Unknown</string>
     <string name="unknown_artist">Unknown Artist</string>
 
-    <!-- Navigation routes (if localization is needed) -->
+    <!-- Navigation routes -->
     <string name="route_main">main</string>
     <string name="route_player">player</string>
     <string name="route_settings">settings</string>
@@ -35,21 +35,34 @@
     <string name="pause">Pause</string>
     <string name="play">Play</string>
     <string name="next">Next</string>
+    <string name="mute">Mute</string>
+    <string name="unmute">Unmute</string>
 
     <!-- Settings screen -->
     <string name="settings_title">Settings</string>
     <string name="back">Back</string>
+    <string name="theme_mode">Theme</string>
+    <string name="auto_theme">Auto</string>
+    <string name="more_options">More</string>
+    <string name="light_theme">Light Theme</string>
     <string name="dark_theme">Dark Theme</string>
+
+    <!-- Sorting -->
+    <string name="sort_by">Sort by</string>
+    <string name="sort_by_title">Title</string>
+    <string name="sort_by_artist">Artist</string>
+    <string name="sort_by_duration">Duration</string>
+    <string name="sort_by_date_added">Date added</string>
 
     <!-- Player screen -->
     <string name="no_song_playing">No song playing</string>
     <string name="shuffle">Shuffle</string>
 
-    <!--    Music service-->
-    <string name="music_service_tag">MusicService</string>
-    <string name="dynamics_processing_requires">DynamicsProcessing requires Android P or higher</string>
-    <string name="dynamics_processing_enabled">DynamicsProcessing enabled successfully</string>
-    <string name="dynamics_processing_failed">Failed to setup DynamicsProcessing</string>
-    <string name="notification_channel_name">Music Player Channel</string>
+    <!-- Music service -->
+    <string name="music_service_tag" translatable="false">MusicService</string>
+    <string name="dynamics_processing_requires" translatable="false">DynamicsProcessing requires Android P or higher</string>
+    <string name="dynamics_processing_enabled" translatable="false">DynamicsProcessing enabled successfully</string>
+    <string name="dynamics_processing_failed" translatable="false">Failed to setup DynamicsProcessing</string>
+    <string name="notification_channel_name" translatable="false">Music Player Channel</string>
 
 </resources>
