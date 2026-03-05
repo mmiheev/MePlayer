@@ -6,8 +6,6 @@ seamless listening experience without any ads or tracking.
 
 > ⚠️ **Note:** MePlayer is still under active development. Feedback is appreciated!
 
-> ⚠️ **Note:** MePlayer is still under active development. Feedback is appreciated!
-
 ## 📸 Screenshots
 
 <table>
