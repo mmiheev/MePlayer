@@ -2,6 +2,8 @@
 
 MePlayer is a beautiful, lightweight, and privacy‑focused music player for Android. Built entirely with **Kotlin** and **Jetpack Compose**, it follows **Material Design 3** guidelines and offers a seamless listening experience without any ads or tracking.
 
+> ⚠️ **Note:** MePlayer is still under active development. Feedback is appreciated!
+
 ## 📸 Screenshots
 
 <table>
@@ -31,11 +33,9 @@ MePlayer is a beautiful, lightweight, and privacy‑focused music player for And
   </tr>
 </table>
 
-> ⚠️ **Note:** MePlayer is still under active development. Feedback is appreciated!
-
 ## 📥 Download
  
-[<img src="./assets/images/get-it-on-github.png" alt="GitHub" height="80">](https://github.com/mmiheev/MePlayer/releases)
+[<img src="./assets/badges/get-it-on-github.png" alt="GitHub" height="80">](https://github.com/mmiheev/MePlayer/releases)
 
 ## 🚀 Getting Started
 
@@ -62,7 +62,6 @@ MePlayer is a beautiful, lightweight, and privacy‑focused music player for And
 - [Coroutines & Flow](https://kotlinlang.org/docs/coroutines-overview.html) – Asynchronous programming.
 - [MediaStore](https://developer.android.com/reference/android/provider/MediaStore) – Querying local audio files.
 - [MediaPlayer](https://developer.android.com/reference/android/media/MediaPlayer) – Audio playback.
-- [Dagger Hilt](https://dagger.dev/hilt/) – Dependency injection (if used; not in the code, but we can mention it's optional). *Actually, the code doesn't use Hilt, so we skip.*
 
 ## 🤝 Contributing
 
