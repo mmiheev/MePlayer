@@ -81,7 +81,21 @@ class PlaybackManager(context: Context) {
             } else {
                 currentIndex = -1
             }
+
             updateShuffleOrderIfNeeded()
+
+            if (currentIndex == -1) {
+                player.stop()
+                _state.update {
+                    it.copy(
+                        currentSong = null,
+                        isPlaying = false,
+                        currentPosition = 0,
+                        duration = 0
+                    )
+                }
+                stopPositionUpdates()
+            }
         }
 
     private var currentIndex = -1
@@ -155,9 +169,8 @@ class PlaybackManager(context: Context) {
     }
 
     fun playMusic(index: Int) {
-        if (musicList.isEmpty()) return
+        if (musicList.isEmpty() || index !in musicList.indices) return
         if (currentIndex == index && player.isPlaying) return
-
         if (audioFocusHandler?.invoke() == false) return
 
         currentIndex = index
