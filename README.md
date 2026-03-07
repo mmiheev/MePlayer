@@ -6,6 +6,8 @@ seamless listening experience without any ads or tracking.
 
 > ⚠️ **Note:** MePlayer is still under active development. Feedback is appreciated!
 
+[![CI](https://github.com/mmiheev/MePlayer/actions/workflows/android.yml/badge.svg)](https://github.com/mmiheev/MePlayer/actions/workflows/android.yml)
+
 ## 📸 Screenshots
 
 <table>
