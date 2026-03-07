@@ -83,7 +83,10 @@ class MusicService : Service() {
 
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
 
-        mediaSession = MediaSessionCompat(this, "MusicService").apply {
+        mediaSession = MediaSessionCompat(
+            this,
+            getString(R.string.music_service_tag)
+        ).apply {
             setCallback(object : MediaSessionCompat.Callback() {
                 override fun onPlay() = playbackManager.startMusic()
                 override fun onPause() = playbackManager.pauseMusic()
@@ -96,7 +99,10 @@ class MusicService : Service() {
         }
 
         createNotificationChannel()
-        registerReceiver(becomingNoisyReceiver, IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY))
+        registerReceiver(
+            becomingNoisyReceiver,
+            IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+        )
 
         stateJob = scope.launch {
             playbackManager.state.collect { state ->
@@ -115,6 +121,7 @@ class MusicService : Service() {
                     playbackManager.startMusic()
                 }
             }
+
             ACTION_NEXT -> playbackManager.playNext()
             ACTION_PREVIOUS -> playbackManager.playPrevious()
         }
@@ -152,7 +159,11 @@ class MusicService : Service() {
             audioManager.requestAudioFocus(focusRequest)
         } else {
             @Suppress("DEPRECATION")
-            audioManager.requestAudioFocus(focusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
+            audioManager.requestAudioFocus(
+                focusChangeListener,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+            )
         }
         isAudioFocused = (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
         return isAudioFocused
@@ -175,10 +186,14 @@ class MusicService : Service() {
                 playbackManager.pauseMusic()
                 abandonAudioFocus()
             }
+
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> playbackManager.pauseMusic()
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> playbackManager.getPlayer().volume = 0.2f
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> playbackManager.getPlayer().volume =
+                0.2f
+
             AudioManager.AUDIOFOCUS_GAIN -> {
-                playbackManager.getPlayer().volume = if (playbackManager.state.value.isMuted) 0f else 1f
+                playbackManager.getPlayer().volume =
+                    if (playbackManager.state.value.isMuted) 0f else 1f
             }
         }
     }
@@ -199,29 +214,73 @@ class MusicService : Service() {
     }
 
     private fun createNotification(song: Audio, isPlaying: Boolean): Notification {
-        val playPauseIntent = Intent(this, MusicService::class.java).setAction(ACTION_PLAY_PAUSE)
-        val nextIntent = Intent(this, MusicService::class.java).setAction(ACTION_NEXT)
-        val prevIntent = Intent(this, MusicService::class.java).setAction(ACTION_PREVIOUS)
+        val playPauseIntent = Intent(this,
+            MusicService::class.java).setAction(ACTION_PLAY_PAUSE)
+        val nextIntent = Intent(this,
+            MusicService::class.java).setAction(ACTION_NEXT)
+        val prevIntent = Intent(this,
+            MusicService::class.java).setAction(ACTION_PREVIOUS)
 
-        val playPausePendingIntent = PendingIntent.getService(this, 0, playPauseIntent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT)
-        val nextPendingIntent = PendingIntent.getService(this, 1, nextIntent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT)
-        val prevPendingIntent = PendingIntent.getService(this, 2, prevIntent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT)
+        val playPausePendingIntent = PendingIntent.getService(
+            this, 0, playPauseIntent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+        )
+
+        val nextPendingIntent = PendingIntent.getService(
+            this, 1, nextIntent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+        )
+
+        val prevPendingIntent = PendingIntent.getService(
+            this, 2, prevIntent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+        )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle(song.title)
             .setContentText(song.artist)
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setContentIntent(createContentIntent())
-            .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSession.sessionToken)
-                .setShowActionsInCompactView(0, 1, 2))
-            .addAction(android.R.drawable.ic_media_previous, "Previous", prevPendingIntent)
-            .addAction(if (isPlaying) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
-                if (isPlaying) "Pause" else "Play", playPausePendingIntent)
-            .addAction(android.R.drawable.ic_media_next, "Next", nextPendingIntent)
+            .setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setMediaSession(mediaSession.sessionToken)
+                    .setShowActionsInCompactView(0, 1, 2)
+            )
+            .addAction(
+                android.R.drawable.ic_media_previous,
+                getString(R.string.previous),
+                prevPendingIntent
+            )
+            .addAction(
+                if (isPlaying) {
+                    android.R.drawable.ic_media_pause
+                } else {
+                    android.R.drawable.ic_media_play
+                },
+                if (isPlaying) {
+                    getString(R.string.pause)
+                } else {
+                    getString(R.string.play)
+                },
+                playPausePendingIntent
+            )
+            .addAction(
+                android.R.drawable.ic_media_next,
+                getString(R.string.next),
+                nextPendingIntent
+            )
             .setOngoing(isPlaying)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .build()
@@ -229,8 +288,14 @@ class MusicService : Service() {
 
     private fun createContentIntent(): PendingIntent {
         val intent = Intent(this, MainActivity::class.java)
-        return PendingIntent.getActivity(this, 0, intent,
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE else PendingIntent.FLAG_UPDATE_CURRENT)
+        return PendingIntent.getActivity(
+            this, 0, intent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+        )
     }
 
     private fun createNotificationChannel() {
@@ -264,7 +329,11 @@ class MusicService : Service() {
                         PlaybackStateCompat.ACTION_STOP
             )
             .setState(
-                if (isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
+                if (isPlaying) {
+                    PlaybackStateCompat.STATE_PLAYING
+                } else {
+                    PlaybackStateCompat.STATE_PAUSED
+                },
                 position,
                 1f
             )

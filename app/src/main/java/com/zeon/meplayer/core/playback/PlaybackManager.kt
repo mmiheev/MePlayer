@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
  * Manages audio playback.
  * Controls ExoPlayer, playback state, playlist, shuffle, mute, and position updates.
  */
-class PlaybackManager(context: Context) {
+open class PlaybackManager(context: Context) {
 
     private val playerListener = object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
@@ -69,7 +69,7 @@ class PlaybackManager(context: Context) {
     }
 
     private val _state = MutableStateFlow(PlaybackState())
-    val state: StateFlow<PlaybackState> = _state.asStateFlow()
+    open val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
     var musicList: List<Audio> = emptyList()
         set(value) {
@@ -81,7 +81,21 @@ class PlaybackManager(context: Context) {
             } else {
                 currentIndex = -1
             }
+
             updateShuffleOrderIfNeeded()
+
+            if (currentIndex == -1) {
+                player.stop()
+                _state.update {
+                    it.copy(
+                        currentSong = null,
+                        isPlaying = false,
+                        currentPosition = 0,
+                        duration = 0
+                    )
+                }
+                stopPositionUpdates()
+            }
         }
 
     private var currentIndex = -1
@@ -155,9 +169,8 @@ class PlaybackManager(context: Context) {
     }
 
     fun playMusic(index: Int) {
-        if (musicList.isEmpty()) return
+        if (musicList.isEmpty() || index !in musicList.indices) return
         if (currentIndex == index && player.isPlaying) return
-
         if (audioFocusHandler?.invoke() == false) return
 
         currentIndex = index
@@ -182,24 +195,24 @@ class PlaybackManager(context: Context) {
         player.volume = if (isMuted) 0f else 1f
     }
 
-    fun pauseMusic() {
+    open fun pauseMusic() {
         player.pause()
     }
 
-    fun startMusic() {
+    open fun startMusic() {
         if (!player.isPlaying && currentIndex != -1) {
             if (audioFocusHandler?.invoke() == false) return
             player.play()
         }
     }
 
-    fun playNext() {
+    open fun playNext() {
         if (musicList.isEmpty() || currentIndex == -1) return
         val nextIndex = if (shuffleEnabled) getNextShuffleIndex() else (currentIndex + 1) % musicList.size
         playMusic(nextIndex)
     }
 
-    fun playPrevious() {
+    open fun playPrevious() {
         if (musicList.isEmpty() || currentIndex == -1) return
         val prevIndex = if (shuffleEnabled) getPreviousShuffleIndex() else {
             if (currentIndex - 1 < 0) musicList.lastIndex else currentIndex - 1
@@ -207,13 +220,13 @@ class PlaybackManager(context: Context) {
         playMusic(prevIndex)
     }
 
-    fun seekTo(position: Long) {
+    open fun seekTo(position: Long) {
         isSeeking = true
         player.seekTo(position)
         _state.update { it.copy(currentPosition = position) }
     }
 
-    fun toggleShuffle() {
+    open fun toggleShuffle() {
         shuffleEnabled = !shuffleEnabled
         if (shuffleEnabled) {
             buildShuffleOrder()
@@ -223,7 +236,7 @@ class PlaybackManager(context: Context) {
         _state.update { it.copy(shuffleEnabled = shuffleEnabled) }
     }
 
-    fun toggleMute() {
+    open fun toggleMute() {
         isMuted = !isMuted
         player.volume = if (isMuted) 0f else 1f
         _state.update { it.copy(isMuted = isMuted) }
