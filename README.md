@@ -8,6 +8,8 @@ seamless listening experience without any ads or tracking.
 
 [![CI](https://github.com/mmiheev/MePlayer/actions/workflows/android.yml/badge.svg)](https://github.com/mmiheev/MePlayer/actions/workflows/android.yml)
 
+[![GitHub Downloads (all releases)](https://img.shields.io/github/downloads/mmiheev/MePlayer/total?style=flat&logo=github&label=Downloads&color=blue)](https://github.com/mmiheev/MePlayer/releases)
+
 ## 📸 Screenshots
 
 <table>
