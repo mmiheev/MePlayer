@@ -5,6 +5,8 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.zeon.meplayer.data.local.datastore.LastPlayedPreferences
+import com.zeon.meplayer.data.local.datastore.LastPlayedState
 import com.zeon.meplayer.domain.model.Audio
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -71,6 +73,8 @@ open class PlaybackManager(context: Context) {
     private val _state = MutableStateFlow(PlaybackState())
     open val state: StateFlow<PlaybackState> = _state.asStateFlow()
 
+    private var lastPlayedPrefs: LastPlayedPreferences? = null
+
     var musicList: List<Audio> = emptyList()
         set(value) {
             field = value
@@ -96,6 +100,8 @@ open class PlaybackManager(context: Context) {
                 }
                 stopPositionUpdates()
             }
+
+            lastPlayedPrefs?.let { restoreLastPlayedState() }
         }
 
     private var currentIndex = -1
@@ -193,10 +199,13 @@ open class PlaybackManager(context: Context) {
         player.prepare()
         player.play()
         player.volume = if (isMuted) 0f else 1f
+
+        saveCurrentState()
     }
 
     open fun pauseMusic() {
         player.pause()
+        saveCurrentState()
     }
 
     open fun startMusic() {
@@ -224,6 +233,7 @@ open class PlaybackManager(context: Context) {
         isSeeking = true
         player.seekTo(position)
         _state.update { it.copy(currentPosition = position) }
+        saveCurrentState()
     }
 
     open fun toggleShuffle() {
@@ -234,17 +244,84 @@ open class PlaybackManager(context: Context) {
             shuffleOrder = null
         }
         _state.update { it.copy(shuffleEnabled = shuffleEnabled) }
+        saveCurrentState()
     }
 
     open fun toggleMute() {
         isMuted = !isMuted
         player.volume = if (isMuted) 0f else 1f
         _state.update { it.copy(isMuted = isMuted) }
+        saveCurrentState()
     }
 
     fun release() {
+        saveCurrentState()
         scope.cancel()
         player.release()
+    }
+
+    fun setLastPlayedPreferences(prefs: LastPlayedPreferences) {
+        lastPlayedPrefs = prefs
+        if (musicList.isNotEmpty()) {
+            restoreLastPlayedState()
+        }
+    }
+
+    private fun restoreLastPlayedState() {
+        if (currentIndex != -1) return
+        lastPlayedPrefs?.let { prefs ->
+            scope.launch {
+                val savedState = prefs.getLastPlayedState()
+                if (savedState != null) {
+                    val index = musicList.indexOfFirst { it.id == savedState.songId }
+                    if (index != -1) {
+                        currentIndex = index
+                        val song = musicList[index]
+                        _state.update {
+                            it.copy(
+                                currentSong = song,
+                                currentPosition = savedState.position,
+                                duration = it.duration,
+                                shuffleEnabled = savedState.shuffleEnabled,
+                                isMuted = savedState.isMuted
+                            )
+                        }
+                        player.setMediaItem(MediaItem.fromUri(song.path))
+                        player.prepare()
+                        player.seekTo(savedState.position)
+                        player.pause()
+                        player.volume = if (savedState.isMuted) 0f else 1f
+
+                        shuffleEnabled = savedState.shuffleEnabled
+                        if (shuffleEnabled) buildShuffleOrder()
+                        isMuted = savedState.isMuted
+                    } else {
+                        prefs.clearState()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun saveCurrentState() {
+        lastPlayedPrefs?.let { prefs ->
+            val song = getCurrentSong()
+            if (song != null) {
+                val state = LastPlayedState(
+                    songId = song.id,
+                    position = player.currentPosition,
+                    shuffleEnabled = shuffleEnabled,
+                    isMuted = isMuted
+                )
+                scope.launch {
+                    prefs.saveState(state)
+                }
+            } else {
+                scope.launch {
+                    prefs.clearState()
+                }
+            }
+        }
     }
 
     fun getPlayer(): ExoPlayer = player

@@ -1,15 +1,13 @@
-package com.zeon.meplayer.core.viewmodel
+package com.zeon.meplayer.presentation.screen.player
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.zeon.meplayer.core.playback.PlaybackManager
 import com.zeon.meplayer.domain.model.Audio
-import com.zeon.meplayer.presentation.screen.player.PlayerViewModel
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertTrue
+import junit.framework.TestCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,12 +64,12 @@ class PlayerViewModelTest {
         viewModel.attach(mockPlaybackManager)
 
         // Then
-        assertEquals(testSong, viewModel.currentSong.value)
-        assertTrue(viewModel.isPlaying.value)
-        assertEquals(5000L, viewModel.currentPosition.value)
-        assertEquals(10000L, viewModel.duration.value)
-        assertTrue(viewModel.shuffleEnabled.value)
-        assertTrue(viewModel.isMuted.value)
+        TestCase.assertEquals(testSong, viewModel.currentSong.value)
+        TestCase.assertTrue(viewModel.isPlaying.value)
+        TestCase.assertEquals(5000L, viewModel.currentPosition.value)
+        TestCase.assertEquals(10000L, viewModel.duration.value)
+        TestCase.assertTrue(viewModel.shuffleEnabled.value)
+        TestCase.assertTrue(viewModel.isMuted.value)
     }
 
     @Test
@@ -83,7 +81,7 @@ class PlayerViewModelTest {
         stateFlow.value = stateFlow.value.copy(isPlaying = true)
 
         // Then
-        assertEquals(true, viewModel.isPlaying.value)
+        TestCase.assertEquals(true, viewModel.isPlaying.value)
     }
 
     @Test
@@ -96,7 +94,7 @@ class PlayerViewModelTest {
         stateFlow.value = stateFlow.value.copy(isPlaying = true)
 
         // Then
-        assertEquals(false, viewModel.isPlaying.value)
+        TestCase.assertEquals(false, viewModel.isPlaying.value)
     }
 
     @Test

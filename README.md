@@ -1,4 +1,20 @@
-# MePlayer
+<div align="center">
+  <img src="assets/icon.png" alt="MePlayer icon" width="200" height="200" style="border-radius: 20%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+</div>
+
+<h1 align="center">MePlayer</h1>
+
+<div align="center">
+  <a href="https://github.com/mmiheev/MePlayer/actions/workflows/android.yml">
+    <img src="https://github.com/mmiheev/MePlayer/actions/workflows/android.yml/badge.svg" alt="CI">
+  </a>
+  <a href="https://github.com/mmiheev/MePlayer/releases">
+    <img src="https://img.shields.io/github/downloads/mmiheev/MePlayer/total?style=flat&logo=github&label=Downloads&color=blue" alt="Downloads">
+  </a>
+  <a href="https://github.com/mmiheev/MePlayer/releases/latest">
+    <img src="https://img.shields.io/github/v/release/mmiheev/MePlayer?style=flat&logo=github&label=Version&color=blue" alt="Version">
+  </a>
+</div>
 
 MePlayer is a beautiful, lightweight, and privacy‑focused music player for Android. Built entirely
 with **Kotlin** and **Jetpack Compose**, it follows **Material Design 3** guidelines and offers a
