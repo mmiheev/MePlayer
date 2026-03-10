@@ -22,6 +22,7 @@ import androidx.core.app.NotificationCompat
 import com.zeon.meplayer.MainActivity
 import com.zeon.meplayer.R
 import com.zeon.meplayer.core.playback.PlaybackManager
+import com.zeon.meplayer.data.local.datastore.LastPlayedPreferences
 import com.zeon.meplayer.domain.model.Audio
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -80,6 +81,9 @@ class MusicService : Service() {
             }
             audioFocusHandler = ::requestAudioFocus
         }
+
+        val lastPlayedPrefs = LastPlayedPreferences(this)
+        playbackManager.setLastPlayedPreferences(lastPlayedPrefs)
 
         audioManager = getSystemService(AUDIO_SERVICE) as AudioManager
 
