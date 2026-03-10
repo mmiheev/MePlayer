@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/icon.png" alt="MePlayer icon" width="120" height="120" style="border-radius: 20%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+  <img src="assets/icon.png" alt="MePlayer icon" width="200" height="200" style="border-radius: 20%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
 </div>
 
 <h1 align="center">MePlayer</h1>
