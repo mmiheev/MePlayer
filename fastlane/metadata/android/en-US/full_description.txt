@@ -1,0 +1,35 @@
+# MePlayer – Modern, Open‑Source Music Player for Android
+
+**MePlayer** is a simple, lightweight, and privacy‑focused music player built entirely with **Kotlin** and **Jetpack Compose**. It follows **Material Design 3** (Material You) guidelines and provides a seamless listening experience – completely free of ads and tracking.
+
+---
+
+## ✨ Key Features
+- **🎨 Material You** – Dynamic theming that adapts to your wallpaper.
+- **🔍 Privacy First** – No analytics, no trackers, no unnecessary permissions.
+- **🎵 Local Playback** – Plays all audio files stored on your device (MP3, FLAC, AAC, etc.) using **ExoPlayer**.
+- **🌙 Dark & Light Themes** – Automatic or manual theme switching.
+- **🔔 Notification Controls** – Playback controls in the status bar.
+- **💾 Lightweight** – Small APK size and minimal memory usage.
+
+---
+
+## 🛡️ Permissions Explained
+MePlayer requests only the permissions it truly needs, and all sensitive permissions are requested at runtime with clear explanations:
+
+| Permission | Purpose |
+|------------|---------|
+| `READ_MEDIA_AUDIO` (Android 13+) / `READ_EXTERNAL_STORAGE` (≤ Android 12) | Read audio files from your device storage. |
+| `WRITE_EXTERNAL_STORAGE` (≤ Android 9) | Delete audio files when you choose to remove them. On Android 10+ deletion uses the system dialog (`MediaStore.createDeleteRequest`) for extra safety. |
+| `POST_NOTIFICATIONS` (Android 13+) | Show media playback notification. You can disable it in settings. |
+| `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | Keep playback alive in the background (required by Android policy). |
+
+No data is collected or shared – your music stays on your device.
+
+---
+
+## 🔧 Open Source
+MePlayer is **100% open source** under a free license. You can:
+- Review the code on [GitHub](https://github.com/mmiheev/MePlayer)
+- Report bugs or request features via [Issues](https://github.com/mmiheev/MePlayer/issues)
+- Contribute by submitting pull requests
