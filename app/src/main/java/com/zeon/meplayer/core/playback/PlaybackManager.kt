@@ -6,7 +6,6 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.zeon.meplayer.data.local.datastore.LastPlayedPreferences
-import com.zeon.meplayer.data.local.datastore.LastPlayedState
 import com.zeon.meplayer.domain.model.Audio
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +59,7 @@ open class PlaybackManager(context: Context) {
             newPosition: Player.PositionInfo,
             reason: Int
         ) {
-            if (reason == 3) {
+            if (reason == Player.DISCONTINUITY_REASON_SKIP) {
                 isSeeking = false
             }
         }
@@ -365,15 +364,6 @@ open class PlaybackManager(context: Context) {
             buildShuffleOrder(currentIndex.takeIf { it in musicList.indices } ?: 0)
         }
     }
-
-    data class PlaybackState(
-        val currentSong: Audio? = null,
-        val isPlaying: Boolean = false,
-        val currentPosition: Long = 0L,
-        val duration: Long = 0L,
-        val shuffleEnabled: Boolean = false,
-        val isMuted: Boolean = false
-    )
 
     companion object {
         private const val POSITION_UPDATE_INTERVAL_MS = 500L

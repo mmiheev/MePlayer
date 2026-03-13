@@ -7,18 +7,12 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.zeon.meplayer.core.playback.LastPlayedState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "last_played")
-
-data class LastPlayedState(
-    val songId: Long,
-    val position: Long,
-    val shuffleEnabled: Boolean,
-    val isMuted: Boolean
-)
 
 class LastPlayedPreferences(private val dataStore: DataStore<Preferences>) {
     constructor(context: Context) : this(context.dataStore)
