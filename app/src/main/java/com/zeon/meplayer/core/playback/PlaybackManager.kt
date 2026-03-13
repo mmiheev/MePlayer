@@ -49,22 +49,18 @@ open class PlaybackManager(context: Context) {
         }
 
         playerController.onPlaybackResumed = {
-            // Добавлено обновление isPlaying
             stateManager.updateIsPlaying(true)
             startPositionUpdates()
             getCurrentSong()?.let { onPlaybackStarted?.invoke(it) }
         }
 
         playerController.onPlaybackPaused = {
-            // Добавлено обновление isPlaying
             stateManager.updateIsPlaying(false)
             stopPositionUpdates()
             onPlaybackPaused?.invoke()
         }
 
-        playerController.onPositionDiscontinuitySkip = {
-            // ничего не делаем, флаг isSeeking уже сброшен
-        }
+        playerController.onPositionDiscontinuitySkip = { }
     }
 
 
@@ -90,19 +86,14 @@ open class PlaybackManager(context: Context) {
         if (playlistManager.currentIndex == index && playerController.isPlaying) return
         if (audioFocusHandler?.invoke() == false) return
 
-        // В реальном коде нужно обновить playlistManager.currentIndex, но у него нет setter.
-        // Добавим метод setCurrentIndex в PlaylistManager, но здесь для простоты используем внутренности.
-        // Лучше добавить в PlaylistManager метод setCurrentIndex.
-        // Сейчас предположим, что PlaylistManager позволяет установить индекс через internal set.
         playlistManager.setCurrentIndex(index)
 
         val song = playlistManager.getCurrentSong()!!
         stateManager.prepareForPlayback(song)
         stateManager.updateShuffleEnabled(playlistManager.isShuffleEnabled())
-        // isMuted сохраняем из текущего состояния
 
         playerController.play(song.path)
-        playerController.setMuted(stateManager.state.value.isMuted) // применить mute
+        playerController.setMuted(stateManager.state.value.isMuted)
 
         saveCurrentState()
     }
@@ -172,9 +163,7 @@ open class PlaybackManager(context: Context) {
         stateManager.updateCurrentPosition(playerController.currentPosition)
     }
 
-    private fun resetFlags() {
-        // Флаги управляются внутри PlayerController
-    }
+    private fun resetFlags() { }
 
     private fun startPositionUpdates() {
         positionUpdateJob?.cancel()
@@ -197,9 +186,7 @@ open class PlaybackManager(context: Context) {
             playerController = playerController,
             stateManager = stateManager
         ) {
-            // После успешного восстановления обновляем UI и флаги
             updateCurrentSongInfo()
-            // Если нужно, можно запустить обновление позиции (но плеер на паузе)
         }
     }
 
