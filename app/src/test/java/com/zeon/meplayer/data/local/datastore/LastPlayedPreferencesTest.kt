@@ -1,5 +1,6 @@
 package com.zeon.meplayer.data.local.datastore
 
+import com.zeon.meplayer.core.playback.LastPlayedState
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
