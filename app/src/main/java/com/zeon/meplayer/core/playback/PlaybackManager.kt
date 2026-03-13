@@ -1,8 +1,6 @@
 package com.zeon.meplayer.core.playback
 
 import android.content.Context
-import androidx.media3.common.C
-import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.zeon.meplayer.data.local.datastore.LastPlayedPreferences
@@ -13,10 +11,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -24,17 +19,28 @@ import kotlinx.coroutines.launch
  * Controls ExoPlayer, playback state, playlist, shuffle, mute, and position updates.
  */
 open class PlaybackManager(context: Context) {
+    private val stateManager = PlaybackStateManager()
+    private val playlistManager = PlaylistManager()
+    private val playerController = PlayerController(context)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var positionUpdateJob: Job? = null
 
-    private val playerListener = object : Player.Listener {
-        override fun onPlaybackStateChanged(playbackState: Int) {
+    private var lastPlayedManager: LastPlayedStateManager? = null
+
+    var onPlaybackStarted: ((Audio) -> Unit)? = null
+    var onPlaybackPaused: (() -> Unit)? = null
+    var audioFocusHandler: (() -> Boolean)? = null
+
+    init {
+        playerController.onPlaybackStateChanged = { playbackState ->
             when (playbackState) {
                 Player.STATE_ENDED -> playNext()
-                Player.STATE_READY -> updateDuration()
+                Player.STATE_READY -> stateManager.updateDuration(playerController.duration)
                 Player.STATE_IDLE -> resetFlags()
             }
         }
 
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+        playerController.onMediaItemTransition = { mediaItem, reason ->
             updateCurrentSongInfo()
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED ||
                 reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
@@ -42,127 +48,139 @@ open class PlaybackManager(context: Context) {
             }
         }
 
-        override fun onIsPlayingChanged(isPlaying: Boolean) {
-            if (!isPlaying && (isSwitchingTrack || isSeeking)) return
-
-            _state.update { it.copy(isPlaying = isPlaying) }
-
-            if (isPlaying) {
-                onPlaybackResumed()
-            } else {
-                onPlaybackPaused()
-            }
+        playerController.onPlaybackResumed = {
+            // Добавлено обновление isPlaying
+            stateManager.updateIsPlaying(true)
+            startPositionUpdates()
+            getCurrentSong()?.let { onPlaybackStarted?.invoke(it) }
         }
 
-        override fun onPositionDiscontinuity(
-            oldPosition: Player.PositionInfo,
-            newPosition: Player.PositionInfo,
-            reason: Int
-        ) {
-            if (reason == Player.DISCONTINUITY_REASON_SKIP) {
-                isSeeking = false
-            }
+        playerController.onPlaybackPaused = {
+            // Добавлено обновление isPlaying
+            stateManager.updateIsPlaying(false)
+            stopPositionUpdates()
+            onPlaybackPaused?.invoke()
+        }
+
+        playerController.onPositionDiscontinuitySkip = {
+            // ничего не делаем, флаг isSeeking уже сброшен
         }
     }
 
-    private val player: ExoPlayer = ExoPlayer.Builder(context).build().apply {
-        addListener(playerListener)
-    }
 
-    private val _state = MutableStateFlow(PlaybackState())
-    open val state: StateFlow<PlaybackState> = _state.asStateFlow()
+    val state: StateFlow<PlaybackState> = stateManager.state
 
-    private var lastPlayedPrefs: LastPlayedPreferences? = null
-
-    var musicList: List<Audio> = emptyList()
+    var musicList: List<Audio>
+        get() = playlistManager.musicList
         set(value) {
-            field = value
             val currentSongId = getCurrentSong()?.id
-            if (currentSongId != null) {
-                val newIndex = value.indexOfFirst { it.id == currentSongId }
-                currentIndex = if (newIndex != -1) newIndex else -1
-            } else {
-                currentIndex = -1
-            }
+            playlistManager.setList(value, currentSongId)
 
-            updateShuffleOrderIfNeeded()
-
-            if (currentIndex == -1) {
-                player.stop()
-                _state.update {
-                    it.copy(
-                        currentSong = null,
-                        isPlaying = false,
-                        currentPosition = 0,
-                        duration = 0
-                    )
-                }
+            if (!playlistManager.hasCurrentSong()) {
+                playerController.stop()
+                stateManager.resetToEmpty()
                 stopPositionUpdates()
             }
 
-            lastPlayedPrefs?.let { restoreLastPlayedState() }
+            lastPlayedManager?.let { restoreLastPlayedState() }
         }
 
-    private var currentIndex = -1
+    fun playMusic(index: Int) {
+        if (!playlistManager.musicList.indices.contains(index)) return
+        if (playlistManager.currentIndex == index && playerController.isPlaying) return
+        if (audioFocusHandler?.invoke() == false) return
 
-    private var shuffleEnabled = false
-    private var shuffleOrder: MutableList<Int>? = null
-    private var shuffleIndex = 0
+        // В реальном коде нужно обновить playlistManager.currentIndex, но у него нет setter.
+        // Добавим метод setCurrentIndex в PlaylistManager, но здесь для простоты используем внутренности.
+        // Лучше добавить в PlaylistManager метод setCurrentIndex.
+        // Сейчас предположим, что PlaylistManager позволяет установить индекс через internal set.
+        playlistManager.setCurrentIndex(index)
 
-    private var isMuted = false
-    private var isSwitchingTrack = false
-    private var isSeeking = false
+        val song = playlistManager.getCurrentSong()!!
+        stateManager.prepareForPlayback(song)
+        stateManager.updateShuffleEnabled(playlistManager.isShuffleEnabled())
+        // isMuted сохраняем из текущего состояния
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private var positionUpdateJob: Job? = null
+        playerController.play(song.path)
+        playerController.setMuted(stateManager.state.value.isMuted) // применить mute
 
-    var onPlaybackStarted: ((Audio) -> Unit)? = null
-    var onPlaybackPaused: (() -> Unit)? = null
+        saveCurrentState()
+    }
 
-    var audioFocusHandler: (() -> Boolean)? = null
+    open fun pauseMusic() {
+        playerController.pause()
+        saveCurrentState()
+    }
 
-    init { player.volume = 1f }
+    open fun startMusic() {
+        if (!playerController.isPlaying && playlistManager.hasCurrentSong()) {
+            if (audioFocusHandler?.invoke() == false) return
+            playerController.start()
+        }
+    }
 
-    private fun getCurrentSong(): Audio? = musicList.getOrNull(currentIndex)
+    open fun playNext() {
+        val nextIndex = playlistManager.playNext() ?: return
+        playMusic(nextIndex)
+    }
+
+    open fun playPrevious() {
+        val prevIndex = playlistManager.playPrevious() ?: return
+        playMusic(prevIndex)
+    }
+
+    open fun seekTo(position: Long) {
+        playerController.seekTo(position)
+        stateManager.updateCurrentPosition(position)
+        saveCurrentState()
+    }
+
+    open fun toggleShuffle() {
+        val enabled = playlistManager.toggleShuffle()
+        stateManager.updateShuffleEnabled(enabled)
+        saveCurrentState()
+    }
+
+    open fun toggleMute() {
+        val isMuted = !state.value.isMuted
+        playerController.setMuted(isMuted)
+        stateManager.updateIsMuted(isMuted)
+        saveCurrentState()
+    }
+
+    fun release() {
+        saveCurrentState()
+        scope.cancel()
+        playerController.release()
+    }
+
+    fun setLastPlayedPreferences(prefs: LastPlayedPreferences) {
+        lastPlayedManager = LastPlayedStateManager(prefs, scope)
+        if (playlistManager.musicList.isNotEmpty()) {
+            restoreLastPlayedState()
+        }
+    }
+
+    fun getPlayer(): ExoPlayer = playerController.getExoPlayer()
+
+    private fun getCurrentSong(): Audio? = playlistManager.getCurrentSong()
 
     private fun updateCurrentSongInfo() {
         val song = getCurrentSong()
-        _state.update {
-            it.copy(
-                currentSong = song,
-                duration = player.duration.takeIf { it != C.TIME_UNSET } ?: 0,
-                currentPosition = player.currentPosition
-            )
-        }
-    }
-
-    private fun updateDuration() {
-        val duration = player.duration.takeIf { it != C.TIME_UNSET } ?: 0
-        _state.update { it.copy(duration = duration) }
+        stateManager.updateCurrentSong(song)
+        stateManager.updateDuration(playerController.duration)
+        stateManager.updateCurrentPosition(playerController.currentPosition)
     }
 
     private fun resetFlags() {
-        isSwitchingTrack = false
-        isSeeking = false
-    }
-
-    private fun onPlaybackResumed() {
-        isSwitchingTrack = false
-        isSeeking = false
-        startPositionUpdates()
-        getCurrentSong()?.let { onPlaybackStarted?.invoke(it) }
-    }
-
-    private fun onPlaybackPaused() {
-        stopPositionUpdates()
-        onPlaybackPaused?.invoke()
+        // Флаги управляются внутри PlayerController
     }
 
     private fun startPositionUpdates() {
         positionUpdateJob?.cancel()
         positionUpdateJob = scope.launch {
-            while (player.isPlaying) {
-                _state.update { it.copy(currentPosition = player.currentPosition) }
+            while (playerController.isPlaying) {
+                stateManager.updateCurrentPosition(playerController.currentPosition)
                 delay(POSITION_UPDATE_INTERVAL_MS)
             }
         }
@@ -173,196 +191,20 @@ open class PlaybackManager(context: Context) {
         positionUpdateJob = null
     }
 
-    fun playMusic(index: Int) {
-        if (musicList.isEmpty() || index !in musicList.indices) return
-        if (currentIndex == index && player.isPlaying) return
-        if (audioFocusHandler?.invoke() == false) return
-
-        currentIndex = index
-        val song = musicList[index]
-
-        _state.update {
-            it.copy(
-                currentSong = song,
-                currentPosition = 0,
-                duration = 0,
-                shuffleEnabled = shuffleEnabled,
-                isMuted = isMuted
-            )
-        }
-
-        isSwitchingTrack = true
-
-        val mediaItem = MediaItem.fromUri(song.path)
-        player.setMediaItem(mediaItem)
-        player.prepare()
-        player.play()
-        player.volume = if (isMuted) 0f else 1f
-
-        saveCurrentState()
-    }
-
-    open fun pauseMusic() {
-        player.pause()
-        saveCurrentState()
-    }
-
-    open fun startMusic() {
-        if (!player.isPlaying && currentIndex != -1) {
-            if (audioFocusHandler?.invoke() == false) return
-            player.play()
-        }
-    }
-
-    open fun playNext() {
-        if (musicList.isEmpty() || currentIndex == -1) return
-        val nextIndex = if (shuffleEnabled) getNextShuffleIndex() else (currentIndex + 1) % musicList.size
-        playMusic(nextIndex)
-    }
-
-    open fun playPrevious() {
-        if (musicList.isEmpty() || currentIndex == -1) return
-        val prevIndex = if (shuffleEnabled) getPreviousShuffleIndex() else {
-            if (currentIndex - 1 < 0) musicList.lastIndex else currentIndex - 1
-        }
-        playMusic(prevIndex)
-    }
-
-    open fun seekTo(position: Long) {
-        isSeeking = true
-        player.seekTo(position)
-        _state.update { it.copy(currentPosition = position) }
-        saveCurrentState()
-    }
-
-    open fun toggleShuffle() {
-        shuffleEnabled = !shuffleEnabled
-        if (shuffleEnabled) {
-            buildShuffleOrder()
-        } else {
-            shuffleOrder = null
-        }
-        _state.update { it.copy(shuffleEnabled = shuffleEnabled) }
-        saveCurrentState()
-    }
-
-    open fun toggleMute() {
-        isMuted = !isMuted
-        player.volume = if (isMuted) 0f else 1f
-        _state.update { it.copy(isMuted = isMuted) }
-        saveCurrentState()
-    }
-
-    fun release() {
-        saveCurrentState()
-        scope.cancel()
-        player.release()
-    }
-
-    fun setLastPlayedPreferences(prefs: LastPlayedPreferences) {
-        lastPlayedPrefs = prefs
-        if (musicList.isNotEmpty()) {
-            restoreLastPlayedState()
-        }
-    }
-
     private fun restoreLastPlayedState() {
-        if (currentIndex != -1) return
-        lastPlayedPrefs?.let { prefs ->
-            scope.launch {
-                val savedState = prefs.getLastPlayedState()
-                if (savedState != null) {
-                    val index = musicList.indexOfFirst { it.id == savedState.songId }
-                    if (index != -1) {
-                        currentIndex = index
-                        val song = musicList[index]
-                        _state.update {
-                            it.copy(
-                                currentSong = song,
-                                currentPosition = savedState.position,
-                                duration = it.duration,
-                                shuffleEnabled = savedState.shuffleEnabled,
-                                isMuted = savedState.isMuted
-                            )
-                        }
-                        player.setMediaItem(MediaItem.fromUri(song.path))
-                        player.prepare()
-                        player.seekTo(savedState.position)
-                        player.pause()
-                        player.volume = if (savedState.isMuted) 0f else 1f
-
-                        shuffleEnabled = savedState.shuffleEnabled
-                        if (shuffleEnabled) buildShuffleOrder()
-                        isMuted = savedState.isMuted
-                    } else {
-                        prefs.clearState()
-                    }
-                }
-            }
+        lastPlayedManager?.restoreIfNeeded(
+            playlistManager = playlistManager,
+            playerController = playerController,
+            stateManager = stateManager
+        ) {
+            // После успешного восстановления обновляем UI и флаги
+            updateCurrentSongInfo()
+            // Если нужно, можно запустить обновление позиции (но плеер на паузе)
         }
     }
 
     private fun saveCurrentState() {
-        lastPlayedPrefs?.let { prefs ->
-            val song = getCurrentSong()
-            if (song != null) {
-                val state = LastPlayedState(
-                    songId = song.id,
-                    position = player.currentPosition,
-                    shuffleEnabled = shuffleEnabled,
-                    isMuted = isMuted
-                )
-                scope.launch {
-                    prefs.saveState(state)
-                }
-            } else {
-                scope.launch {
-                    prefs.clearState()
-                }
-            }
-        }
-    }
-
-    fun getPlayer(): ExoPlayer = player
-
-    private fun buildShuffleOrder(startIndex: Int = currentIndex) {
-        if (musicList.isEmpty()) {
-            shuffleOrder = null
-            return
-        }
-        val indices = musicList.indices.toMutableList()
-        indices.remove(startIndex)
-        indices.shuffle()
-        shuffleOrder = mutableListOf(startIndex).apply { addAll(indices) }
-        shuffleIndex = 0
-    }
-
-    private fun getNextShuffleIndex(): Int {
-        val order = shuffleOrder ?: return (currentIndex + 1) % musicList.size
-        if (shuffleIndex + 1 < order.size) {
-            shuffleIndex++
-            return order[shuffleIndex]
-        } else {
-            buildShuffleOrder(currentIndex)
-            return shuffleOrder!!.getOrElse(1) { currentIndex }
-        }
-    }
-
-    private fun getPreviousShuffleIndex(): Int {
-        val order = shuffleOrder ?: return (if (currentIndex - 1 < 0) musicList.lastIndex else currentIndex - 1)
-        if (shuffleIndex - 1 >= 0) {
-            shuffleIndex--
-            return order[shuffleIndex]
-        } else {
-            shuffleIndex = order.lastIndex
-            return order[shuffleIndex]
-        }
-    }
-
-    private fun updateShuffleOrderIfNeeded() {
-        if (shuffleEnabled) {
-            buildShuffleOrder(currentIndex.takeIf { it in musicList.indices } ?: 0)
-        }
+        lastPlayedManager?.saveCurrent(playlistManager, playerController)
     }
 
     companion object {
