@@ -3,6 +3,7 @@ package com.zeon.meplayer.presentation.screen.playlist.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,6 +53,8 @@ fun TrackListItem(
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val gradient =
+        if (isSystemInDarkTheme()) AppGradients.darkGradient else AppGradients.primaryGradient
 
     Card(
         modifier = modifier
@@ -87,7 +90,7 @@ fun TrackListItem(
                     .size(48.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(
-                        brush = AppGradients.primaryGradient,
+                        brush = gradient,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .padding(8.dp)
@@ -147,31 +150,54 @@ fun TrackListItem(
                                             action.onAdd()
                                         },
                                         leadingIcon = {
-                                            Icon(Icons.Default.PlaylistAdd, contentDescription = null)
+                                            Icon(
+                                                Icons.Default.PlaylistAdd,
+                                                contentDescription = null
+                                            )
                                         }
                                     )
                                 }
+
                                 is TrackAction.RemoveFromPlaylist -> {
                                     DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.remove)) },
+                                        text = {
+                                            Text(
+                                                stringResource(R.string.remove),
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        },
                                         onClick = {
                                             expanded = false
                                             action.onRemove()
                                         },
                                         leadingIcon = {
-                                            Icon(Icons.Default.Delete, contentDescription = null)
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
                                         }
                                     )
                                 }
+
                                 is TrackAction.DeleteFromDevice -> {
                                     DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.delete)) },
+                                        text = {
+                                            Text(
+                                                stringResource(R.string.delete),
+                                                color = MaterialTheme.colorScheme.error
+                                            )
+                                        },
                                         onClick = {
                                             expanded = false
                                             action.onDelete()
                                         },
                                         leadingIcon = {
-                                            Icon(Icons.Default.DeleteForever, contentDescription = null)
+                                            Icon(
+                                                Icons.Default.DeleteForever,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
                                         }
                                     )
                                 }
