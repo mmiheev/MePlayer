@@ -23,13 +23,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -43,25 +46,33 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zeon.meplayer.R
+import com.zeon.meplayer.data.repository.PlaylistRepository
+import com.zeon.meplayer.presentation.screen.playlist.viewmodel.PlaylistsViewModel
+import com.zeon.meplayer.presentation.screen.playlist.components.TrackAction
+import com.zeon.meplayer.presentation.screen.playlist.components.TrackListItem
 import com.zeon.meplayer.domain.model.Audio
-import com.zeon.meplayer.presentation.screen.main.components.MusicListItem
 import com.zeon.meplayer.presentation.screen.main.components.PlayingBar
-import com.zeon.meplayer.presentation.theme.AppGradients
 import com.zeon.meplayer.presentation.screen.player.PlayerViewModel
+import com.zeon.meplayer.presentation.screen.playlist.components.PlaylistSelectionBottomSheet
+import com.zeon.meplayer.presentation.theme.AppGradients
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     musicList: List<Audio>,
     playerViewModel: PlayerViewModel,
+    playlistRepository: PlaylistRepository,
     onSongSelect: (Int) -> Unit,
     onSongDelete: (Audio) -> Unit,
     onNavigateToSettings: () -> Unit,
-    onNavigateToPlayer: () -> Unit
+    onNavigateToPlayer: () -> Unit,
+    onNavigateToPlaylists: () -> Unit
 ) {
     val currentSong by playerViewModel.currentSong.collectAsState()
     val isPlaying by playerViewModel.isPlaying.collectAsState()
@@ -69,8 +80,21 @@ fun MainScreen(
     val duration by playerViewModel.duration.collectAsState()
     val isDarkTheme = isSystemInDarkTheme()
 
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     var isSearching by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
+
+    var showPlaylistBottomSheet by remember { mutableStateOf(false) }
+    var selectedSongForPlaylist by remember { mutableStateOf<Audio?>(null) }
+    var showDeleteDeviceDialog by remember { mutableStateOf(false) }
+    var songToDelete by remember { mutableStateOf<Audio?>(null) }
+
+    val playlistsViewModel: PlaylistsViewModel = viewModel(
+        factory = PlaylistsViewModel.provideFactory(playlistRepository)
+    )
+    val playlists by playlistsViewModel.playlists.collectAsState()
 
     val focusRequester = remember { FocusRequester() }
 
@@ -164,14 +188,23 @@ fun MainScreen(
                     } else {
                         IconButton(onClick = { isSearching = true }) {
                             Icon(
-                                Icons.Default.Search,
-                                contentDescription = stringResource(R.string.search_icon)
+                                imageVector = Icons.Default.Search,
+                                contentDescription = stringResource(R.string.search_icon),
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        IconButton(onClick = onNavigateToPlaylists) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_playlist_64),
+                                contentDescription = stringResource(R.string.playlists),
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                         IconButton(onClick = onNavigateToSettings) {
                             Icon(
-                                Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings_icon)
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings_icon),
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
@@ -189,16 +222,65 @@ fun MainScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
             ) {
                 items(filteredList) { song ->
-                    MusicListItem(
+                    TrackListItem(
                         song = song,
                         isNowPlaying = (currentSong?.id == song.id),
                         onClick = {
                             val originalIndex = musicList.indexOfFirst { it.id == song.id }
                             if (originalIndex != -1) onSongSelect(originalIndex)
                         },
-                        onDelete = { onSongDelete(song) }
+                        actions = listOf(
+                            TrackAction.AddToPlaylist {
+                                selectedSongForPlaylist = song
+                                showPlaylistBottomSheet = true
+                            },
+                            TrackAction.DeleteFromDevice {
+                                songToDelete = song
+                                showDeleteDeviceDialog = true
+                            }
+                        )
                     )
                 }
+            }
+
+            if (showDeleteDeviceDialog && songToDelete != null) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDeviceDialog = false },
+                    title = { Text(stringResource(R.string.delete_title)) },
+                    text = { Text(stringResource(R.string.delete_confirmation, songToDelete!!.title)) },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                onSongDelete(songToDelete!!)
+                                showDeleteDeviceDialog = false
+                                songToDelete = null
+                            }
+                        ) {
+                            Text(stringResource(R.string.delete_confirm))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showDeleteDeviceDialog = false
+                            songToDelete = null
+                        }) {
+                            Text(stringResource(R.string.delete_cancel))
+                        }
+                    }
+                )
+            }
+
+            if (showPlaylistBottomSheet) {
+                PlaylistSelectionBottomSheet(
+                    playlists = playlists,
+                    onDismiss = { showPlaylistBottomSheet = false },
+                    onPlaylistSelected = { playlistId ->
+                        selectedSongForPlaylist?.let { song ->
+                            playlistsViewModel.addSongsToPlaylist(playlistId, listOf(song.id))
+                            showPlaylistBottomSheet = false
+                        }
+                    }
+                )
             }
 
             AnimatedVisibility(visible = currentSong != null) {

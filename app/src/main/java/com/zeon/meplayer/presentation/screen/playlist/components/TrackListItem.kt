@@ -1,8 +1,8 @@
-package com.zeon.meplayer.presentation.screen.main.components
+package com.zeon.meplayer.presentation.screen.playlist.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,14 +14,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.PlaylistAdd
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,7 +35,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -40,22 +44,19 @@ import com.zeon.meplayer.presentation.theme.AppGradients
 import com.zeon.meplayer.presentation.utils.formatTime
 
 @Composable
-fun MusicListItem(
+fun TrackListItem(
     song: Audio,
     isNowPlaying: Boolean = false,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    actions: List<TrackAction> = emptyList(),
+    modifier: Modifier = Modifier
 ) {
-    if (isNowPlaying) MaterialTheme.colorScheme.primaryContainer
-    else MaterialTheme.colorScheme.surface
-
-    LocalContext.current
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .then(
                 if (isNowPlaying) {
                     Modifier.border(
@@ -67,10 +68,7 @@ fun MusicListItem(
                     Modifier
                 }
             )
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = { showDeleteDialog = true }
-            ),
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isNowPlaying) MaterialTheme.colorScheme.primaryContainer
@@ -123,31 +121,65 @@ fun MusicListItem(
             Text(
                 text = formatTime(song.duration),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 8.dp)
             )
-        }
-    }
 
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text(stringResource(R.string.delete_title)) },
-            text = { Text(stringResource(R.string.delete_confirmation, song.title)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        onDelete()
-                        showDeleteDialog = false
+            if (actions.isNotEmpty()) {
+                Box {
+                    IconButton(onClick = { expanded = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(R.string.more_options)
+                        )
                     }
-                ) {
-                    Text(stringResource(R.string.delete_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text(stringResource(R.string.delete_cancel))
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        actions.forEach { action ->
+                            when (action) {
+                                is TrackAction.AddToPlaylist -> {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.add_to_playlist)) },
+                                        onClick = {
+                                            expanded = false
+                                            action.onAdd()
+                                        },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.PlaylistAdd, contentDescription = null)
+                                        }
+                                    )
+                                }
+                                is TrackAction.RemoveFromPlaylist -> {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.remove)) },
+                                        onClick = {
+                                            expanded = false
+                                            action.onRemove()
+                                        },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Delete, contentDescription = null)
+                                        }
+                                    )
+                                }
+                                is TrackAction.DeleteFromDevice -> {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.delete)) },
+                                        onClick = {
+                                            expanded = false
+                                            action.onDelete()
+                                        },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.DeleteForever, contentDescription = null)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
-        )
+        }
     }
 }

@@ -65,4 +65,27 @@
     <string name="dynamics_processing_failed" translatable="false">Failed to setup DynamicsProcessing</string>
     <string name="notification_channel_name" translatable="false">Music Player Channel</string>
 
+    <!-- Playlist-->
+    <string name="remove_from_playlist_confirmation">Remove "%s" from playlist?</string>
+    <string name="remove">Remove</string>
+    <string name="playlists">Playlist</string>
+    <string name="add_to_playlist">Add to playlist</string>
+    <string name="playlists_title">Playlist</string>
+    <string name="create_playlist">Create playlist</string>
+    <string name="new_playlist">New playlist</string>
+    <string name="playlist_name">Playlist name</string>
+    <string name="create">Create</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="playlist_details">Playlist details</string>
+    <string name="empty_playlist">Empty playlist</string>
+    <string name="add_songs">Add songs</string>
+    <string name="add">Add</string>
+    <string name="no_playlists">No playlists</string>
+    <string name="remove_from_playlist_title">Remove from playlist</string>
+    <string name="added_songs_to_playlist">Added %d songs to playlist</string>
+    <string name="playlist_not_found">Error: playlist not found</string>
+    <string name="delete_playlist_confirmation">Are you sure you want to delete playlist \"%s\"?</string>
+    <string name="delete_playlist_title">Delete playlist</string>
+
 </resources>

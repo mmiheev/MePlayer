@@ -19,7 +19,7 @@ import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
 import androidx.core.app.NotificationCompat
-import com.zeon.meplayer.MainActivity
+import com.zeon.meplayer.presentation.MainActivity
 import com.zeon.meplayer.R
 import com.zeon.meplayer.core.playback.PlaybackManager
 import com.zeon.meplayer.data.local.datastore.LastPlayedPreferences

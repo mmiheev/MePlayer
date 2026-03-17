@@ -43,7 +43,8 @@ open class PlaybackManager(context: Context) {
         playerController.onMediaItemTransition = { mediaItem, reason ->
             updateCurrentSongInfo()
             if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED ||
-                reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
+                reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO
+            ) {
                 getCurrentSong()?.let { onPlaybackStarted?.invoke(it) }
             }
         }
@@ -63,6 +64,23 @@ open class PlaybackManager(context: Context) {
         playerController.onPositionDiscontinuitySkip = { }
     }
 
+    private var allSongs: List<Audio> = emptyList()
+
+    fun setAllSongs(songs: List<Audio>) {
+        allSongs = songs
+    }
+
+    fun setPlaylist(songs: List<Audio>) {
+        musicList = songs
+        if (!playlistManager.hasCurrentSong()) {
+            playerController.stop()
+            stateManager.resetToEmpty()
+        }
+    }
+
+    fun resetToAllSongs() {
+        if (allSongs.isNotEmpty()) musicList = allSongs
+    }
 
     val state: StateFlow<PlaybackState> = stateManager.state
 
@@ -163,7 +181,7 @@ open class PlaybackManager(context: Context) {
         stateManager.updateCurrentPosition(playerController.currentPosition)
     }
 
-    private fun resetFlags() { }
+    private fun resetFlags() {}
 
     private fun startPositionUpdates() {
         positionUpdateJob?.cancel()
