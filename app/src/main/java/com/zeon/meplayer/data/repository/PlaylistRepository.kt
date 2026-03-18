@@ -55,6 +55,11 @@ class PlaylistRepository(
         playlistSongDao.insertAllSongs(newEntries)
     }
 
+    suspend fun isSongInPlaylist(playlistId: Long, songId: Long): Boolean {
+        val ids = playlistSongDao.getSongIdsForPlaylist(playlistId).first()
+        return songId in ids
+    }
+
     suspend fun removeSongFromPlaylist(playlistId: Long, songId: Long) {
         playlistSongDao.deleteSongById(playlistId, songId)
     }

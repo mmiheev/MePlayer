@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class PlaylistsViewModel(
-    private val repository: PlaylistRepository
+    private val repository: PlaylistRepository,
+    private val onPlaylistDeleted: (Long) -> Unit = {}
 ) : ViewModel() {
 
     private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
@@ -36,6 +37,7 @@ class PlaylistsViewModel(
     fun deletePlaylist(playlistId: Long) {
         viewModelScope.launch {
             repository.deletePlaylist(playlistId)
+            onPlaylistDeleted(playlistId)
         }
     }
 
@@ -60,15 +62,16 @@ class PlaylistsViewModel(
     }
 
     companion object {
-        fun provideFactory(repository: PlaylistRepository): ViewModelProvider.Factory {
-            return object : ViewModelProvider.Factory {
-                @Suppress("UNCHECKED_CAST")
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    if (modelClass.isAssignableFrom(PlaylistsViewModel::class.java)) {
-                        return PlaylistsViewModel(repository) as T
-                    }
-                    throw IllegalArgumentException("Unknown ViewModel class")
+        fun provideFactory(
+            repository: PlaylistRepository,
+            onPlaylistDeleted: (Long) -> Unit = {}
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(PlaylistsViewModel::class.java)) {
+                    return PlaylistsViewModel(repository, onPlaylistDeleted) as T
                 }
+                throw IllegalArgumentException("Unknown ViewModel class")
             }
         }
     }

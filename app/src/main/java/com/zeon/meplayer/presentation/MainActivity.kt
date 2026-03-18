@@ -21,20 +21,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.zeon.meplayer.R
-import com.zeon.meplayer.data.repository.MusicRepository
+import com.zeon.meplayer.core.permission.PermissionHandler
 import com.zeon.meplayer.core.service.MusicServiceConnection
+import com.zeon.meplayer.data.local.AppDatabase
+import com.zeon.meplayer.data.local.datastore.SortPreferences
+import com.zeon.meplayer.data.repository.MusicRepository
+import com.zeon.meplayer.data.repository.PlaylistRepository
 import com.zeon.meplayer.presentation.screen.main.MainScreen
 import com.zeon.meplayer.presentation.screen.player.PlayerScreen
-import com.zeon.meplayer.presentation.screen.settings.SettingsScreen
-import com.zeon.meplayer.presentation.theme.MePlayerTheme
-import com.zeon.meplayer.data.local.datastore.SortPreferences
-import com.zeon.meplayer.core.permission.PermissionHandler
-import com.zeon.meplayer.data.local.AppDatabase
-import com.zeon.meplayer.data.repository.PlaylistRepository
 import com.zeon.meplayer.presentation.screen.player.PlayerViewModel
 import com.zeon.meplayer.presentation.screen.playlist.AddSongsToPlaylistScreen
 import com.zeon.meplayer.presentation.screen.playlist.PlaylistDetailScreen
 import com.zeon.meplayer.presentation.screen.playlist.PlaylistsScreen
+import com.zeon.meplayer.presentation.screen.settings.SettingsScreen
+import com.zeon.meplayer.presentation.theme.MePlayerTheme
 import com.zeon.meplayer.presentation.viewmodel.rememberThemeViewModel
 import kotlinx.coroutines.launch
 
@@ -108,24 +108,37 @@ class MainActivity : ComponentActivity() {
                                 musicList = musicList,
                                 playerViewModel = playerViewModel,
                                 playlistRepository = playlistRepository,
+                                playbackManager = serviceConnection.getPlaybackManager(),
                                 onSongSelect = { position ->
                                     val manager = serviceConnection.getPlaybackManager()
-                                    if (manager == null) {
+                                    if (manager != null) {
+                                        manager.musicList = musicList
+                                        if (manager.canPlayAt(position)) {
+                                            manager.playMusic(position)
+                                            navController.navigate(Screen.PLAYER) {
+                                                popUpTo(Screen.MAIN) { inclusive = false }
+                                            }
+                                        } else {
+                                            Toast.makeText(
+                                                this@MainActivity,
+                                                "Не удалось воспроизвести",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    } else {
                                         Toast.makeText(
                                             this@MainActivity,
                                             R.string.service_not_ready,
                                             Toast.LENGTH_SHORT
                                         ).show()
-                                    } else {
-                                        manager.resetToAllSongs()
-                                        manager.playMusic(position)
-                                        navController.navigate(Screen.PLAYER)
                                     }
                                 },
                                 onSongDelete = { audio -> permissionHandler.deleteAudio(audio) },
                                 onNavigateToSettings = { navController.navigate(Screen.SETTINGS) },
                                 onNavigateToPlayer = { navController.navigate(Screen.PLAYER) },
-                                onNavigateToPlaylists = { navController.navigate(Screen.PLAYLISTS) }
+                                onPlaylistClick = { playlistId ->
+                                    navController.navigate("${Screen.PLAYLIST_DETAIL}/$playlistId")
+                                }
                             )
                         }
                         composable(Screen.SETTINGS) {
@@ -161,9 +174,25 @@ class MainActivity : ComponentActivity() {
                                 playerViewModel = playerViewModel,
                                 onSongClick = { position, songs ->
                                     val manager = serviceConnection.getPlaybackManager()
-                                    manager?.setPlaylist(songs)
-                                    manager?.playMusic(position)
-                                    navController.navigate(Screen.PLAYER)
+                                    if (manager != null) {
+                                        manager.setPlaylist(songs)
+                                        if (manager.canPlayAt(position)) {
+                                            manager.playMusic(position)
+                                            navController.navigate(Screen.PLAYER)
+                                        } else {
+                                            Toast.makeText(
+                                                this@MainActivity,
+                                                "не может играть",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    } else {
+                                        Toast.makeText(
+                                            this@MainActivity,
+                                            R.string.service_not_ready,
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                 },
                                 onAddSongs = {
                                     navController.navigate("${Screen.ADD_SONGS}/$playlistId")

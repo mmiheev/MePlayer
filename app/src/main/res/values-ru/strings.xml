@@ -62,7 +62,7 @@
     <!-- Playlist-->
     <string name="remove_from_playlist_confirmation">Убрать "%s" из этого плейлиста?</string>
     <string name="remove">Удалить</string>
-    <string name="playlists">Плейлист</string>
+    <string name="playlists">Плейлисты</string>
     <string name="add_to_playlist">Добавить в плейлист</string>
     <string name="playlists_title">Плейлист</string>
     <string name="create_playlist">Создать плейлист</string>
@@ -81,5 +81,6 @@
     <string name="playlist_not_found">Ошибка: плейлист не найден</string>
     <string name="delete_playlist_confirmation">Вы уверены, что хотите удалить плейлист "%s"?</string>
     <string name="delete_playlist_title">Удалить плейлист</string>
+    <string name="all_songs">Все песни</string>
 
 </resources>

@@ -66,6 +66,8 @@ open class PlaybackManager(context: Context) {
 
     private var allSongs: List<Audio> = emptyList()
 
+    fun canPlayAt(index: Int): Boolean = index in musicList.indices
+
     fun setAllSongs(songs: List<Audio>) {
         allSongs = songs
     }

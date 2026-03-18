@@ -42,10 +42,6 @@ fun AddSongsToPlaylistScreen(
     onSongsSelected: (List<Long>) -> Unit,
     onBack: () -> Unit
 ) {
-    val viewModel: PlaylistsViewModel = viewModel(
-        factory = PlaylistsViewModel.provideFactory(playlistRepository)
-    )
-
     var existingSongIds by remember { mutableStateOf(setOf<Long>()) }
     var isLoading by remember { mutableStateOf(true) }
 

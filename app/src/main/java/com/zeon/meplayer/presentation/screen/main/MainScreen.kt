@@ -6,20 +6,19 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -29,17 +28,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,21 +47,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zeon.meplayer.R
+import com.zeon.meplayer.core.playback.PlaybackManager
 import com.zeon.meplayer.data.repository.PlaylistRepository
-import com.zeon.meplayer.presentation.screen.playlist.viewmodel.PlaylistsViewModel
-import com.zeon.meplayer.presentation.screen.playlist.components.TrackAction
-import com.zeon.meplayer.presentation.screen.playlist.components.TrackListItem
 import com.zeon.meplayer.domain.model.Audio
+import com.zeon.meplayer.presentation.screen.main.components.ModeSelector
 import com.zeon.meplayer.presentation.screen.main.components.PlayingBar
+import com.zeon.meplayer.presentation.screen.main.components.SongsList
+import com.zeon.meplayer.presentation.screen.main.model.MainContentMode
 import com.zeon.meplayer.presentation.screen.player.PlayerViewModel
 import com.zeon.meplayer.presentation.screen.playlist.components.PlaylistSelectionBottomSheet
+import com.zeon.meplayer.presentation.screen.playlist.components.PlaylistsList
+import com.zeon.meplayer.presentation.screen.playlist.viewmodel.PlaylistsViewModel
 import com.zeon.meplayer.presentation.theme.AppGradients
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,32 +72,49 @@ fun MainScreen(
     musicList: List<Audio>,
     playerViewModel: PlayerViewModel,
     playlistRepository: PlaylistRepository,
+    playbackManager: PlaybackManager?,
     onSongSelect: (Int) -> Unit,
     onSongDelete: (Audio) -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToPlayer: () -> Unit,
-    onNavigateToPlaylists: () -> Unit
+    onPlaylistClick: (Long) -> Unit
 ) {
     val currentSong by playerViewModel.currentSong.collectAsState()
-    val isPlaying by playerViewModel.isPlaying.collectAsState()
-    val currentPosition by playerViewModel.currentPosition.collectAsState()
-    val duration by playerViewModel.duration.collectAsState()
-    val isDarkTheme = isSystemInDarkTheme()
-
-    var isSearching by rememberSaveable { mutableStateOf(false) }
-    var searchQuery by rememberSaveable { mutableStateOf("") }
-
-    var showPlaylistBottomSheet by remember { mutableStateOf(false) }
-    var selectedSongForPlaylist by remember { mutableStateOf<Audio?>(null) }
-    var showDeleteDeviceDialog by remember { mutableStateOf(false) }
-    var songToDelete by remember { mutableStateOf<Audio?>(null) }
+    val bottomPadding = if (currentSong != null) 100.dp else 0.dp
+    val coroutineScope = rememberCoroutineScope()
 
     val playlistsViewModel: PlaylistsViewModel = viewModel(
-        factory = PlaylistsViewModel.provideFactory(playlistRepository)
+        factory = PlaylistsViewModel.provideFactory(
+            playlistRepository,
+            onPlaylistDeleted = { deletedId ->
+                coroutineScope.launch {
+                    val currentSong = playbackManager?.state?.value?.currentSong
+                    if (currentSong != null) {
+                        val isInPlaylist =
+                            playlistRepository.isSongInPlaylist(deletedId, currentSong.id)
+                        if (!isInPlaylist) {
+                            playbackManager.resetToAllSongs()
+                        }
+                    }
+                }
+            }
+        )
     )
     val playlists by playlistsViewModel.playlists.collectAsState()
 
+    var isSearching by rememberSaveable { mutableStateOf(false) }
+    var searchQuery by rememberSaveable { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
+
+    var selectedMode by remember { mutableStateOf(MainContentMode.SONGS) }
+
+    var showPlaylistBottomSheet by remember { mutableStateOf(false) }
+    var selectedSongForPlaylist by remember { mutableStateOf<Audio?>(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var songToDelete by remember { mutableStateOf<Audio?>(null) }
+
+    var showCreatePlaylistDialog by remember { mutableStateOf(false) }
+    var newPlaylistName by remember { mutableStateOf("") }
 
     LaunchedEffect(isSearching) { if (isSearching) focusRequester.requestFocus() }
 
@@ -167,7 +187,8 @@ fun MainScreen(
                             text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.headlineMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                brush = if (isDarkTheme) AppGradients.darkGradient else AppGradients.primaryGradient
+                                brush = if (isSystemInDarkTheme()) AppGradients.darkGradient
+                                else AppGradients.primaryGradient
                             )
                         )
                     }
@@ -184,25 +205,26 @@ fun MainScreen(
                             )
                         }
                     } else {
-                        IconButton(onClick = { isSearching = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = stringResource(R.string.search_icon),
-                                modifier = Modifier.size(24.dp)
-                            )
+                        if (selectedMode == MainContentMode.SONGS) {
+                            IconButton(onClick = { isSearching = true }) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = stringResource(R.string.search_icon)
+                                )
+                            }
                         }
-                        IconButton(onClick = onNavigateToPlaylists) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_playlist_64),
-                                contentDescription = stringResource(R.string.playlists),
-                                modifier = Modifier.size(24.dp)
-                            )
+                        if (selectedMode == MainContentMode.PLAYLISTS) {
+                            IconButton(onClick = { showCreatePlaylistDialog = true }) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = stringResource(R.string.create_playlist)
+                                )
+                            }
                         }
                         IconButton(onClick = onNavigateToSettings) {
                             Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings_icon),
-                                modifier = Modifier.size(24.dp)
+                                Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings_icon)
                             )
                         }
                     }
@@ -210,93 +232,153 @@ fun MainScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
             ) {
-                items(filteredList) { song ->
-                    TrackListItem(
-                        song = song,
-                        isNowPlaying = (currentSong?.id == song.id),
-                        onClick = {
-                            val originalIndex = musicList.indexOfFirst { it.id == song.id }
-                            if (originalIndex != -1) onSongSelect(originalIndex)
-                        },
-                        actions = listOf(
-                            TrackAction.AddToPlaylist {
+                ModeSelector(
+                    selectedMode = selectedMode,
+                    onModeSelected = { newMode ->
+                        selectedMode = newMode
+                        if (newMode == MainContentMode.PLAYLISTS) {
+                            isSearching = false
+                            searchQuery = ""
+                        }
+                    },
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                when (selectedMode) {
+                    MainContentMode.SONGS -> {
+                        SongsList(
+                            songs = filteredList,
+                            currentSong = currentSong,
+                            onSongClick = { index, songs ->
+                                val originalIndex =
+                                    musicList.indexOfFirst { it.id == songs[index].id }
+                                if (originalIndex != -1) {
+                                    onSongSelect(originalIndex)
+                                }
+                            },
+                            onAddToPlaylist = { song ->
                                 selectedSongForPlaylist = song
                                 showPlaylistBottomSheet = true
                             },
-                            TrackAction.DeleteFromDevice {
+                            onDelete = { song ->
                                 songToDelete = song
-                                showDeleteDeviceDialog = true
-                            }
+                                showDeleteDialog = true
+                            },
+                            modifier = Modifier.weight(1f),
+                            bottomPadding = bottomPadding
                         )
-                    )
+                    }
+
+                    MainContentMode.PLAYLISTS -> {
+                        PlaylistsList(
+                            viewModel = playlistsViewModel,
+                            onPlaylistClick = onPlaylistClick,
+                            modifier = Modifier.weight(1f),
+                            bottomPadding = bottomPadding
+                        )
+                    }
                 }
             }
 
-            if (showDeleteDeviceDialog && songToDelete != null) {
-                AlertDialog(
-                    onDismissRequest = { showDeleteDeviceDialog = false },
-                    title = { Text(stringResource(R.string.delete_title)) },
-                    text = { Text(stringResource(R.string.delete_confirmation, songToDelete!!.title)) },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                onSongDelete(songToDelete!!)
-                                showDeleteDeviceDialog = false
-                                songToDelete = null
-                            },
-                            colors = ButtonDefaults.textButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error
-                            )
-                        ) {
-                            Text(stringResource(R.string.delete_confirm))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = {
-                            showDeleteDeviceDialog = false
-                            songToDelete = null
-                        }) {
-                            Text(stringResource(R.string.delete_cancel))
-                        }
-                    }
-                )
-            }
-
-            if (showPlaylistBottomSheet) {
-                PlaylistSelectionBottomSheet(
-                    playlists = playlists,
-                    onDismiss = { showPlaylistBottomSheet = false },
-                    onPlaylistSelected = { playlistId ->
-                        selectedSongForPlaylist?.let { song ->
-                            playlistsViewModel.addSongsToPlaylist(playlistId, listOf(song.id))
-                            showPlaylistBottomSheet = false
-                        }
-                    }
-                )
-            }
-
-            AnimatedVisibility(visible = currentSong != null) {
+            AnimatedVisibility(
+                visible = currentSong != null,
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
                 PlayingBar(
                     currentSong = currentSong,
-                    isPlaying = isPlaying,
-                    currentPosition = currentPosition,
-                    duration = duration,
+                    isPlaying = playerViewModel.isPlaying.collectAsState().value,
+                    currentPosition = playerViewModel.currentPosition.collectAsState().value,
+                    duration = playerViewModel.duration.collectAsState().value,
                     onPlayPause = { playerViewModel.playPause() },
                     onNext = { playerViewModel.playNext() },
                     onPrevious = { playerViewModel.playPrevious() },
                     onClick = onNavigateToPlayer,
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier
+                        .padding(bottom = 8.dp)
+                        .navigationBarsPadding()
                 )
             }
+        }
+
+        if (showPlaylistBottomSheet && selectedSongForPlaylist != null) {
+            PlaylistSelectionBottomSheet(
+                playlists = playlists,
+                onDismiss = { showPlaylistBottomSheet = false },
+                onPlaylistSelected = { playlistId ->
+                    playlistsViewModel.addSongsToPlaylist(
+                        playlistId,
+                        listOf(selectedSongForPlaylist!!.id)
+                    )
+                    showPlaylistBottomSheet = false
+                }
+            )
+        }
+
+        if (showDeleteDialog && songToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text(stringResource(R.string.delete_title)) },
+                text = { Text(stringResource(R.string.delete_confirmation, songToDelete!!.title)) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onSongDelete(songToDelete!!)
+                            showDeleteDialog = false
+                            songToDelete = null
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Text(stringResource(R.string.delete_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showDeleteDialog = false
+                        songToDelete = null
+                    }) {
+                        Text(stringResource(R.string.delete_cancel))
+                    }
+                }
+            )
+        }
+
+        if (showCreatePlaylistDialog) {
+            AlertDialog(
+                onDismissRequest = { showCreatePlaylistDialog = false },
+                title = { Text(stringResource(R.string.new_playlist)) },
+                text = {
+                    OutlinedTextField(
+                        value = newPlaylistName,
+                        onValueChange = { newPlaylistName = it },
+                        label = { Text(stringResource(R.string.playlist_name)) },
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (newPlaylistName.isNotBlank()) {
+                                playlistsViewModel.createPlaylist(newPlaylistName)
+                                newPlaylistName = ""
+                                showCreatePlaylistDialog = false
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.create))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCreatePlaylistDialog = false }) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                }
+            )
         }
     }
 }
