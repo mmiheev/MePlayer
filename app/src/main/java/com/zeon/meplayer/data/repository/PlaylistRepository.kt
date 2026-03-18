@@ -8,6 +8,7 @@ import com.zeon.meplayer.data.local.entity.PlaylistSongEntity
 import com.zeon.meplayer.domain.model.toPlaylist
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
@@ -42,6 +43,10 @@ class PlaylistRepository(
         playlistSongDao.deleteAllSongs(playlistId)
     }
 
+    suspend fun getPlaylistSongIds(playlistId: Long): List<Long> {
+        return playlistSongDao.getSongIdsForPlaylist(playlistId).first()
+    }
+
     suspend fun addSongsToPlaylist(playlistId: Long, songIds: List<Long>) {
         val currentMaxPosition = playlistSongDao.getMaxPosition(playlistId) ?: -1
         val newEntries = songIds.mapIndexed { index, songId ->
@@ -49,7 +54,6 @@ class PlaylistRepository(
         }
         playlistSongDao.insertAllSongs(newEntries)
     }
-
 
     suspend fun removeSongFromPlaylist(playlistId: Long, songId: Long) {
         playlistSongDao.deleteSongById(playlistId, songId)

@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material3.Card
@@ -67,7 +66,6 @@ fun SelectableMusicListItem(
             )
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Иконка с градиентом (зелёным)
             Box(
                 modifier = Modifier
                     .size(40.dp)
