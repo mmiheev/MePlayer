@@ -1,5 +1,4 @@
 [versions]
-accompanistPager = "0.36.0"
 agp = "9.0.1"
 coreKtx = "1.17.0"
 coreTesting = "2.2.0"
