@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
                                         } else {
                                             Toast.makeText(
                                                 this@MainActivity,
-                                                "Не удалось воспроизвести",
+                                                getString(R.string.not_play),
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }
@@ -182,7 +182,7 @@ class MainActivity : ComponentActivity() {
                                         } else {
                                             Toast.makeText(
                                                 this@MainActivity,
-                                                "не может играть",
+                                                getString(R.string.not_play),
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }

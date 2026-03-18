@@ -82,5 +82,6 @@
     <string name="delete_playlist_confirmation">Вы уверены, что хотите удалить плейлист "%s"?</string>
     <string name="delete_playlist_title">Удалить плейлист</string>
     <string name="all_songs">Все песни</string>
+    <string name="not_play">Не удалось воспроизвести</string>
 
 </resources>

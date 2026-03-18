@@ -88,5 +88,6 @@
     <string name="delete_playlist_confirmation">Are you sure you want to delete playlist \"%s\"?</string>
     <string name="delete_playlist_title">Delete playlist</string>
     <string name="all_songs">All songs</string>
+    <string name="not_play">Could not play</string>
 
 </resources>
