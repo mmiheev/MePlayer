@@ -84,4 +84,11 @@
     <string name="all_songs">Все песни</string>
     <string name="not_play">Не удалось воспроизвести</string>
 
+    <plurals name="song_count">
+        <item quantity="one">%d песня</item>
+        <item quantity="few">%d песни</item>
+        <item quantity="many">%d песен</item>
+        <item quantity="other">%d песен</item>
+    </plurals>
+
 </resources>

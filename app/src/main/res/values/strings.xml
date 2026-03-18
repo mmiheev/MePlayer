@@ -90,4 +90,9 @@
     <string name="all_songs">All songs</string>
     <string name="not_play">Could not play</string>
 
+    <plurals name="song_count">
+        <item quantity="one">%d song</item>
+        <item quantity="other">%d songs</item>
+    </plurals>
+
 </resources>

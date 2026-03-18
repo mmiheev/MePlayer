@@ -20,9 +20,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -116,7 +120,9 @@ fun MainScreen(
     var showCreatePlaylistDialog by remember { mutableStateOf(false) }
     var newPlaylistName by remember { mutableStateOf("") }
 
-    LaunchedEffect(isSearching) { if (isSearching) focusRequester.requestFocus() }
+    LaunchedEffect(isSearching) {
+        if (isSearching) focusRequester.requestFocus()
+    }
 
     val filteredList = remember(searchQuery, musicList) {
         if (searchQuery.isBlank()) {
@@ -183,14 +189,52 @@ fun MainScreen(
                                 .focusRequester(focusRequester)
                         )
                     } else {
-                        Text(
-                            text = stringResource(R.string.app_name),
-                            style = MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                brush = if (isSystemInDarkTheme()) AppGradients.darkGradient
-                                else AppGradients.primaryGradient
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = stringResource(R.string.app_name),
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    brush = if (isSystemInDarkTheme()) AppGradients.darkGradient
+                                    else AppGradients.primaryGradient
+                                ),
+                                modifier = Modifier.weight(1f)
                             )
-                        )
+                            if (selectedMode == MainContentMode.SONGS) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                AssistChip(
+                                    onClick = { },
+                                    label = {
+                                        Text(
+                                            text = pluralStringResource(
+                                                R.plurals.song_count,
+                                                musicList.size,
+                                                musicList.size
+                                            ),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.MusicNote,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(AssistChipDefaults.IconSize),
+                                            tint = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    },
+                                    colors = AssistChipDefaults.assistChipColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        leadingIconContentColor = MaterialTheme.colorScheme.onPrimary,
+                                        labelColor = MaterialTheme.colorScheme.onPrimary
+                                    ),
+                                    border = null,
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+                        }
                     }
                 },
                 actions = {
