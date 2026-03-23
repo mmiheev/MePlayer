@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,6 +31,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -53,6 +52,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.zeon.meplayer.R
@@ -189,56 +189,78 @@ fun MainScreen(
                                 .focusRequester(focusRequester)
                         )
                     } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = stringResource(R.string.app_name),
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    brush = if (isSystemInDarkTheme()) AppGradients.darkGradient
-                                    else AppGradients.primaryGradient
-                                ),
-                                modifier = Modifier.weight(1f)
-                            )
-                            if (selectedMode == MainContentMode.SONGS) {
-                                Spacer(modifier = Modifier.width(8.dp))
-                                AssistChip(
-                                    onClick = { },
-                                    label = {
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                brush = if (isSystemInDarkTheme()) AppGradients.darkGradient
+                                else AppGradients.primaryGradient
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                },
+                actions = {
+                    if (!isSearching) {
+                        when (selectedMode) {
+                            MainContentMode.SONGS -> {
+                                Surface(
+                                    shape = RoundedCornerShape(16.dp),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier
+                                        .padding(end = 4.dp)
+                                        .align(Alignment.CenterVertically)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(
+                                            horizontal = 8.dp,
+                                            vertical = 4.dp
+                                        )
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.MusicNote,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = pluralStringResource(
                                                 R.plurals.song_count,
                                                 musicList.size,
                                                 musicList.size
                                             ),
-                                            style = MaterialTheme.typography.labelLarge,
+                                            style = MaterialTheme.typography.labelMedium,
                                             color = MaterialTheme.colorScheme.onPrimary
                                         )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.MusicNote,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(AssistChipDefaults.IconSize),
-                                            tint = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    },
-                                    colors = AssistChipDefaults.assistChipColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        leadingIconContentColor = MaterialTheme.colorScheme.onPrimary,
-                                        labelColor = MaterialTheme.colorScheme.onPrimary
-                                    ),
-                                    border = null,
-                                    modifier = Modifier.padding(start = 8.dp)
-                                )
+                                    }
+                                }
+                                IconButton(onClick = { isSearching = true }) {
+                                    Icon(
+                                        Icons.Default.Search,
+                                        contentDescription = stringResource(R.string.search_icon)
+                                    )
+                                }
+                            }
+
+                            MainContentMode.PLAYLISTS -> {
+                                IconButton(onClick = { showCreatePlaylistDialog = true }) {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = stringResource(R.string.create_playlist)
+                                    )
+                                }
                             }
                         }
-                    }
-                },
-                actions = {
-                    if (isSearching) {
+                        IconButton(onClick = onNavigateToSettings) {
+                            Icon(
+                                Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings_icon)
+                            )
+                        }
+                    } else {
                         IconButton(onClick = {
                             isSearching = false
                             searchQuery = ""
@@ -246,29 +268,6 @@ fun MainScreen(
                             Icon(
                                 Icons.Default.Close,
                                 contentDescription = stringResource(R.string.close_search)
-                            )
-                        }
-                    } else {
-                        if (selectedMode == MainContentMode.SONGS) {
-                            IconButton(onClick = { isSearching = true }) {
-                                Icon(
-                                    Icons.Default.Search,
-                                    contentDescription = stringResource(R.string.search_icon)
-                                )
-                            }
-                        }
-                        if (selectedMode == MainContentMode.PLAYLISTS) {
-                            IconButton(onClick = { showCreatePlaylistDialog = true }) {
-                                Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = stringResource(R.string.create_playlist)
-                                )
-                            }
-                        }
-                        IconButton(onClick = onNavigateToSettings) {
-                            Icon(
-                                Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings_icon)
                             )
                         }
                     }
