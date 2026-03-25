@@ -2,6 +2,7 @@ package com.zeon.meplayer.presentation.screen.player
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.zeon.meplayer.core.playback.PlaybackManager
+import com.zeon.meplayer.core.playback.PlaybackState
 import com.zeon.meplayer.domain.model.Audio
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -30,7 +31,7 @@ class PlayerViewModelTest {
     private val testDispatcher = UnconfinedTestDispatcher()
     private lateinit var viewModel: PlayerViewModel
     private lateinit var mockPlaybackManager: PlaybackManager
-    private val stateFlow = MutableStateFlow(PlaybackManager.PlaybackState())
+    private val stateFlow = MutableStateFlow(PlaybackState())
 
     @Before
     fun setUp() {
@@ -51,7 +52,7 @@ class PlayerViewModelTest {
     fun `attach subscribes to playback state and updates flows`() = runTest {
         // Given
         val testSong = Audio(1, "path", "title", "artist", 10000)
-        stateFlow.value = PlaybackManager.PlaybackState(
+        stateFlow.value = PlaybackState(
             currentSong = testSong,
             isPlaying = true,
             currentPosition = 5000L,

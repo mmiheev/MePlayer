@@ -35,7 +35,7 @@
         android:theme="@style/Theme.MePlayer">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".presentation.MainActivity"
             android:screenOrientation="portrait"
             android:exported="true"
             android:label="@string/app_name"
