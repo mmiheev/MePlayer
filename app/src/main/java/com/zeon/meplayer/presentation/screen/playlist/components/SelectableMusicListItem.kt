@@ -24,9 +24,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.zeon.meplayer.domain.model.Audio
+import com.zeon.meplayer.presentation.AlbumArt
 import com.zeon.meplayer.presentation.theme.AppGradients
 import com.zeon.meplayer.presentation.utils.formatTime
 
@@ -66,19 +68,13 @@ fun SelectableMusicListItem(
             )
             Spacer(modifier = Modifier.width(12.dp))
 
-            Box(
+            AlbumArt(
+                audio = song,
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .background(gradient)
-                    .padding(8.dp)
-            ) {
-                Icon(
-                    Icons.Default.MusicNote,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+                    .clip(MaterialTheme.shapes.small),
+                contentScale = ContentScale.Crop
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 

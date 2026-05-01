@@ -218,12 +218,18 @@ class MusicService : Service() {
     }
 
     private fun createNotification(song: Audio, isPlaying: Boolean): Notification {
-        val playPauseIntent = Intent(this,
-            MusicService::class.java).setAction(ACTION_PLAY_PAUSE)
-        val nextIntent = Intent(this,
-            MusicService::class.java).setAction(ACTION_NEXT)
-        val prevIntent = Intent(this,
-            MusicService::class.java).setAction(ACTION_PREVIOUS)
+        val playPauseIntent = Intent(
+            this,
+            MusicService::class.java
+        ).setAction(ACTION_PLAY_PAUSE)
+        val nextIntent = Intent(
+            this,
+            MusicService::class.java
+        ).setAction(ACTION_NEXT)
+        val prevIntent = Intent(
+            this,
+            MusicService::class.java
+        ).setAction(ACTION_PREVIOUS)
 
         val playPausePendingIntent = PendingIntent.getService(
             this, 0, playPauseIntent,
@@ -291,7 +297,11 @@ class MusicService : Service() {
     }
 
     private fun createContentIntent(): PendingIntent {
-        val intent = Intent(this, MainActivity::class.java)
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
         return PendingIntent.getActivity(
             this, 0, intent,
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

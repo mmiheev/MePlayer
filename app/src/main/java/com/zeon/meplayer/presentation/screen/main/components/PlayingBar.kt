@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.zeon.meplayer.R
 import com.zeon.meplayer.domain.model.Audio
+import com.zeon.meplayer.presentation.AlbumArt
 import com.zeon.meplayer.presentation.theme.AppGradients
 
 @Composable
@@ -71,23 +72,12 @@ fun PlayingBar(
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                AlbumArt(
+                    audio = currentSong,
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            brush = gradient,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MusicNote,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+                )
 
                 Spacer(modifier = Modifier.width(12.dp))
 

@@ -17,7 +17,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 6
-        versionName = "1.3.0"
+        versionName = "1.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.androidx.media)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.room.runtime)
+    implementation(libs.coil.compose)
     ksp(libs.androidx.room.compiler)
 
     testImplementation(libs.junit)

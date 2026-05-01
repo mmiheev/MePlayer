@@ -1,6 +1,7 @@
 package com.zeon.meplayer.data.repository
 
 import android.Manifest
+import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -79,7 +80,8 @@ class MusicRepository(
             MediaStore.Audio.Media.ARTIST,
             MediaStore.Audio.Media.DATA,
             MediaStore.Audio.Media.DURATION,
-            MediaStore.Audio.Media.DATE_ADDED
+            MediaStore.Audio.Media.DATE_ADDED,
+            MediaStore.Audio.Media.ALBUM_ID
         )
 
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
@@ -108,13 +110,26 @@ class MusicRepository(
             val artistColumn = it.getColumnIndex(MediaStore.Audio.Media.ARTIST)
             val dataColumn = it.getColumnIndex(MediaStore.Audio.Media.DATA)
             val durationColumn = it.getColumnIndex(MediaStore.Audio.Media.DURATION)
+            val dateAddedColumn = it.getColumnIndex(MediaStore.Audio.Media.DATE_ADDED)
+            val albumIdColumn = it.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
+
             while (it.moveToNext()) {
                 val id = it.getLong(idColumn)
                 val title = it.getString(titleColumn) ?: unknownTitle
                 val artist = it.getString(artistColumn) ?: unknownArtist
                 val path = it.getString(dataColumn)
                 val duration = it.getLong(durationColumn)
-                list.add(Audio(id, path, title, artist, duration))
+                val dateAdded = it.getLong(dateAddedColumn)
+                val albumId = if (albumIdColumn != -1) it.getLong(albumIdColumn) else -1
+
+                val albumArtUri = if (albumId != -1L) {
+                    ContentUris.withAppendedId(
+                        MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                        albumId
+                    )
+                } else null
+
+                list.add(Audio(id, path, title, artist, duration, dateAdded, albumArtUri))
             }
         }
 
