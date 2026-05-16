@@ -98,8 +98,18 @@ open class PlaybackManager(context: Context) {
                 stopPositionUpdates()
             }
 
-            lastPlayedManager?.let { restoreLastPlayedState() }
+//            lastPlayedManager?.let { restoreLastPlayedState() }
         }
+
+    fun restoreLastPlayedStateIfNeeded() {
+        lastPlayedManager?.restoreIfNeeded(
+            playlistManager = playlistManager,
+            playerController = playerController,
+            stateManager = stateManager
+        ) {
+            updateCurrentSongInfo()
+        }
+    }
 
     fun playMusic(index: Int) {
         if (!playlistManager.musicList.indices.contains(index)) return

@@ -47,12 +47,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.zeon.meplayer.R
+import com.zeon.meplayer.presentation.AlbumArt
 import com.zeon.meplayer.presentation.theme.AppGradients
 import com.zeon.meplayer.presentation.utils.formatTime
 import com.zeon.meplayer.presentation.theme.ThemeMode
@@ -120,20 +123,11 @@ fun PlayerScreen(
                     .clip(RoundedCornerShape(24.dp)),
                 elevation = CardDefaults.cardElevation(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            brush = albumGradient, shape = RoundedCornerShape(24.dp)
-                        ), contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MusicNote,
-                        contentDescription = null,
-                        modifier = Modifier.size(120.dp),
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
+                AlbumArt(
+                    audio = currentSong,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))

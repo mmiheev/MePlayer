@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
 
     private val serviceConnection = MusicServiceConnection(this) { playbackManager ->
         playbackManager.musicList = musicRepository.musicList.value
+        playbackManager.restoreLastPlayedStateIfNeeded()
         playerViewModel.attach(playbackManager)
     }
 
