@@ -50,7 +50,7 @@ class PlaybackStateManager {
             it.copy(
                 currentSong = song,
                 currentPosition = 0,
-                duration = 0
+                duration = -1
             )
         }
     }
