@@ -6,7 +6,13 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 
-class PlayerController(context: Context) {
+class PlayerController(private val player: ExoPlayer) {
+
+    constructor(context: Context) : this(
+        ExoPlayer.Builder(context).build().apply {
+        }
+    )
+
     private var isSwitchingTrack = false
     private var isSeeking = false
 
@@ -52,8 +58,8 @@ class PlayerController(context: Context) {
         }
     }
 
-    private val player: ExoPlayer = ExoPlayer.Builder(context).build().apply {
-        addListener(playerListener)
+    init {
+        player.addListener(playerListener)
     }
 
     val isPlaying: Boolean get() = player.isPlaying

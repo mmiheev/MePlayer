@@ -9,15 +9,19 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.MediaMetadataRetriever
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.support.v4.media.session.PlaybackStateCompat
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.zeon.meplayer.presentation.MainActivity
 import com.zeon.meplayer.R
@@ -30,6 +34,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Background service responsible for audio playback.
@@ -326,13 +331,22 @@ class MusicService : Service() {
 
     private fun updateMediaSession(song: Audio?, isPlaying: Boolean, position: Long) {
         if (song != null) {
-            val metadata = MediaMetadataCompat.Builder()
+            val metadataBuilder = MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, song.title)
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, song.artist)
                 .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, song.duration)
-                .build()
-            mediaSession.setMetadata(metadata)
+
+            scope.launch {
+                val bitmap = getEmbeddedAlbumArt(song)
+                bitmap?.let {
+                    metadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, it)
+                }
+                mediaSession.setMetadata(metadataBuilder.build())
+            }
+        } else {
+            mediaSession.setMetadata(MediaMetadataCompat.Builder().build())
         }
+
         val state = PlaybackStateCompat.Builder()
             .setActions(
                 PlaybackStateCompat.ACTION_PLAY or
@@ -343,15 +357,29 @@ class MusicService : Service() {
                         PlaybackStateCompat.ACTION_STOP
             )
             .setState(
-                if (isPlaying) {
-                    PlaybackStateCompat.STATE_PLAYING
-                } else {
-                    PlaybackStateCompat.STATE_PAUSED
-                },
+                if (isPlaying) PlaybackStateCompat.STATE_PLAYING else PlaybackStateCompat.STATE_PAUSED,
                 position,
                 1f
             )
             .build()
         mediaSession.setPlaybackState(state)
+    }
+
+    private suspend fun getEmbeddedAlbumArt(audio: Audio): Bitmap? = withContext(Dispatchers.IO) {
+        var retriever: MediaMetadataRetriever? = null
+        try {
+            retriever = MediaMetadataRetriever().apply {
+                setDataSource(applicationContext, audio.uri)
+            }
+            val picture = retriever?.embeddedPicture
+            if (picture != null) {
+                BitmapFactory.decodeByteArray(picture, 0, picture.size)
+            } else null
+        } catch (e: Exception) {
+            Log.e("MusicService", "Failed to extract album art", e)
+            null
+        } finally {
+            retriever?.release()
+        }
     }
 }

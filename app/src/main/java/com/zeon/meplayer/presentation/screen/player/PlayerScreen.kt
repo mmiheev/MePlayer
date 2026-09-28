@@ -169,11 +169,12 @@ fun PlayerScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        formatTime(currentPosition),
+                        text = if (duration < 0) "--:--" else formatTime(currentPosition),
                         style = MaterialTheme.typography.labelSmall
                     )
                     Text(
-                        formatTime(duration), style = MaterialTheme.typography.labelSmall
+                        text = if (duration < 0) "--:--" else formatTime(duration),
+                        style = MaterialTheme.typography.labelSmall
                     )
                 }
             }

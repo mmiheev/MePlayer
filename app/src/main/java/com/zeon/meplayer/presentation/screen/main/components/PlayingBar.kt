@@ -138,8 +138,7 @@ fun PlayingBar(
             }
 
             LinearProgressIndicator(
-                progress = if (duration > 0) currentPosition.toFloat() / duration
-                else 0f,
+                progress = if (duration > 0) currentPosition.toFloat() / duration else 0f,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
